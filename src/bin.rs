@@ -1,3 +1,5 @@
+use mpsc::broadcaster;
+
 pub fn main() {
-    println!("Hello, world!");
+    broadcaster::listen();
 }
