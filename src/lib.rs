@@ -1,4 +1,4 @@
-pub mod broadcaster;
+pub mod caster;
 pub mod player;
 
 #[cfg(test)]
