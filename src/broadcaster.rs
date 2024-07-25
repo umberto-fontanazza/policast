@@ -3,7 +3,7 @@ use scap::{
     capturer::{Area, Capturer, Options, Point, Size},
     frame::Frame,
 };
-use std::net::UdpSocket;
+use std::net::{IpAddr, UdpSocket};
 
 pub fn print_ip() {
     match local_ip() {
@@ -13,12 +13,17 @@ pub fn print_ip() {
 }
 
 pub fn listen() {
-    let mut buffer = [0u8; 500];
-    let socket = UdpSocket::bind("192.168.1.52:3400").expect("couldn't bind to address");
-    println!("Listening!");
-    let (len, sender_address) = socket.recv_from(&mut buffer).expect("Fuck");
-    println!("Done!");
-    println!("{:?}", buffer);
+    let my_ip = local_ip().expect("Couldn't get local ip");
+    let mut buffer = [0u8; 80];
+    let socket = UdpSocket::bind((my_ip, 3400)).expect("couldn't bind to address");
+    loop {
+        println!("Listening!");
+        let (_, sender_address) = socket
+            .recv_from(&mut buffer)
+            .expect("Sciagura e dannazione");
+        println!("Packet received from {sender_address}");
+        println!("{:?}", buffer);
+    }
 }
 
 pub fn test_screencap() {
