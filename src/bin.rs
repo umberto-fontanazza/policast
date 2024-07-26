@@ -1,17 +1,14 @@
 use mpsc::{caster, player};
-use std::{
-    env,
-    net::{IpAddr, Ipv4Addr},
-};
+use std::env;
 
 pub fn main() {
     let args: Vec<String> = env::args().collect();
     let terminal = &args[1];
     println!("{:?}", terminal);
     if terminal == "caster" {
-        caster::listen();
-    } else if terminal == "win" {
-        player::send_udp_packet(IpAddr::V4(Ipv4Addr::new(192, 168, 1, 52)), 3400);
+        caster::setup();
+    } else if terminal == "player" {
+        player::setup();
     } else {
         println!("Unrecognised command line arg");
     }
