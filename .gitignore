@@ -1,1 +1,10 @@
+# Cargo
 /target
+
+#IDE
+.idea/
+
+
+# Platform-specific
+*.DS_Store
+
