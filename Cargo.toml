@@ -16,5 +16,3 @@ path = "src/bin.rs"
 [dependencies]
 local-ip-address = "0.6.1"
 scap = "0.0.5"
-ffmpeg-next = "7.0.2"
-image = "0.25.2"
