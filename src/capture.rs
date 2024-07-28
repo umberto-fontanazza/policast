@@ -1,125 +1,124 @@
-use std::io::Write;
-use std::process::{Command, Stdio, Child, ChildStdin};
-use scap::{
-    capturer::{Point, Area, Size, Capturer, Options},
-    frame::Frame,
-};
+use std::process::{Command, Child, Stdio};
+use std::io::{self, BufRead, BufReader};
+use std::thread;
+use std::sync::{Arc, Mutex};
+use std::sync::mpsc::{self, Sender, Receiver};
 
-pub struct CaptureContext {
-    capturer: Capturer,
-    ffmpeg_stdin: ChildStdin,
-    ffmpeg_process: Child,
+fn get_ffmpeg_args(video_width: u32, video_height: u32, x: u32, y: u32) -> Vec<String> {
+    let crop_filter = format!("crop={}:{}:{}:{}", video_width, video_height, x, y);
+    let video_size = format!("{}x{}", video_width, video_height);
+
+    let args = if cfg!(target_os = "macos") {
+        vec![
+            "-f", "avfoundation",
+            "-r", "30",
+            "-i", "2",
+            "-video_size", &video_size,
+            "-vf", &crop_filter,
+            "-pix_fmt", "yuv420p",
+            "-c:v", "libx264",
+            "-t","10", //TODO: RIMUOVERE
+            "-f", "hls",
+            "-hls_time", "2",
+            "-hls_list_size", "0",
+            "-hls_flags", "delete_segments",
+            "-hls_segment_filename", "target/output_%03d.ts",
+            "target/output.m3u8",
+        ]
+    } else if cfg!(target_os = "windows") {
+        vec![
+            "-f", "gdigrab",
+            "-framerate", "30",
+            "-i", "desktop",
+            "-vf", &crop_filter,
+            "-pix_fmt", "yuv420p",
+            "-c:v", "libx264",
+            "-f", "hls",
+            "-hls_time", "2",
+            "-hls_list_size", "0",
+            "-hls_flags", "delete_segments",
+            "-hls_segment_filename", "target/output_%03d.ts",
+            "target/output.m3u8",
+        ]
+    } else if cfg!(target_os = "linux") {
+        vec![
+            "-f", "x11grab",
+            "-r", "30",
+            "-s", &video_size,
+            "-i", ":0.0",
+            "-vf", &crop_filter,
+            "-pix_fmt", "yuv420p",
+            "-c:v", "libx264",
+            "-f", "hls",
+            "-hls_time", "2",
+            "-hls_list_size", "0",
+            "-hls_flags", "delete_segments",
+            "-hls_segment_filename", "target/output_%03d.ts",
+            "target/output.m3u8",
+        ]
+    } else {
+        panic!("Unsupported operating system");
+    };
+
+    args.into_iter().map(String::from).collect()
 }
 
-impl CaptureContext {
-    pub fn init_capture(x: f64, y: f64, width: f64, height: f64) -> Result<Self, Box<dyn std::error::Error>> {
-        if !scap::is_supported() {
-            println!("❌ Platform not supported");
-            return Err("Platform not supported".into());
-        }
-        println!("✅ Platform supported");
+fn capture_screen_area(video_width: u32, video_height: u32, x: u32, y: u32, stop_receiver: Receiver<()>) -> io::Result<Arc<Mutex<Child>>> {
+    let ffmpeg_args = get_ffmpeg_args(video_width, video_height, x, y);
 
-        if !scap::has_permission() {
-            println!("❌ Permission not granted. Requesting permission...");
-            if !scap::request_permission() {
-                println!("❌ Permission denied");
-                return Err("Permission denied".into());
-            }
-        }
-        println!("✅ Permission granted");
+    let ffmpeg_command = Command::new("ffmpeg")
+        .args(&ffmpeg_args)
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
+        .spawn()?;
 
-        let targets = scap::get_targets();
-        println!("🎯 Targets: {:?}", targets);
+    let ffmpeg_command = Arc::new(Mutex::new(ffmpeg_command));
+    let ffmpeg_command_clone = Arc::clone(&ffmpeg_command);
 
-        let options = Options {
-            fps: 25,
-            targets,
-            show_cursor: true,
-            show_highlight: true,
-            excluded_targets: None,
-            output_type: scap::frame::FrameType::BGRAFrame,
-            output_resolution: scap::capturer::Resolution::Captured,
-            source_rect: Some(Area {
-                origin: Point { x, y },
-                size: Size {
-                    width: width / 2.0,
-                    height: height / 2.0,
-                },
-            }),
-            ..Default::default()
-        };
+    thread::spawn(move || {
+        let stdout = ffmpeg_command_clone.lock().unwrap().stdout.take().unwrap();
+        let stderr = ffmpeg_command_clone.lock().unwrap().stderr.take().unwrap();
+        let stdout_reader = BufReader::new(stdout);
+        let stderr_reader = BufReader::new(stderr);
 
-        let capturer = Capturer::new(options);
+        let mut stdout_lines = stdout_reader.lines();
+        let mut stderr_lines = stderr_reader.lines();
 
-        let mut ffmpeg = Command::new("ffmpeg")
-            .args(&[
-                "-f", "rawvideo",
-                "-pix_fmt", "bgra",
-                "-s", &format!("{}x{}", width as u32, height as u32),
-                "-r", "25",
-                "-i", "-",
-                "-c:v", "libx264",
-                "-pix_fmt", "yuv420p",
-                "-b:v", "1M",
-                "target/output.mp4",
-            ])
-            .stdin(Stdio::piped())
-            .spawn()?;
-
-        let ffmpeg_stdin = ffmpeg.stdin.take().expect("Failed to open stdin");
-
-        Ok(Self {
-            capturer,
-            ffmpeg_stdin,
-            ffmpeg_process: ffmpeg,
-        })
-    }
-
-    pub fn stop_capture(mut self) -> Result<(), Box<dyn std::error::Error>> {
-        self.capturer.stop_capture();
-        self.ffmpeg_stdin.flush()?;
-        drop(self.ffmpeg_stdin);
-        let output = self.ffmpeg_process.wait_with_output()?;
-
-        if !output.status.success() {
-            return Err(format!("FFmpeg error: {}", String::from_utf8_lossy(&output.stderr)).into());
-        }
-
-        println!("Video saved to target/output.mp4");
-        Ok(())
-    }
-
-    pub fn capture_frames(&mut self, stop_signal: std::sync::mpsc::Receiver<()>) -> Result<(), Box<dyn std::error::Error>> {
-        self.capturer.start_capture();
         loop {
-            if let Ok(_) = stop_signal.try_recv() {
+            if let Ok(_) = stop_receiver.try_recv() {
+                println!("Stop signal received.");
+                ffmpeg_command_clone.lock().unwrap().kill().unwrap();
                 break;
             }
-            match self.capturer.get_next_frame() {
-                Ok(Frame::BGRA(frame)) => {
-                    self.ffmpeg_stdin.write_all(&frame.data)?;
+
+            if let Some(line) = stdout_lines.next() {
+                if let Ok(line) = line {
+                    println!("{}", line);
                 }
-                Err(e) => eprintln!("Failed to capture frame: {}", e),
-                _ => eprintln!("Unsupported frame type"),
+            }
+
+            if let Some(line) = stderr_lines.next() {
+                if let Ok(line) = line {
+                    eprintln!("{}", line);
+                }
             }
         }
-        Ok(())
-    }
-
-}
-
-pub fn start_capture_thread(x: f64, y: f64, width: f64, height: f64) -> Result<(std::thread::JoinHandle<()>, std::sync::mpsc::Sender<()>), Box<dyn std::error::Error>> {
-    let (tx, rx) = std::sync::mpsc::channel();
-
-    let handle = std::thread::spawn(move || {
-        let mut context = CaptureContext::init_capture(x, y, width, height).unwrap();
-        context.capture_frames(rx).unwrap();
-        context.stop_capture().expect("Failed to stop capture");
     });
 
-    Ok((handle, tx))
+    Ok(ffmpeg_command)
 }
 
-pub fn send_stop_signal(tx: std::sync::mpsc::Sender<()>) {
-    tx.send(()).unwrap();
+pub fn start_screen_capture(video_width: u32, video_height: u32, x: u32, y: u32) -> (Arc<Mutex<Child>>, Arc<Mutex<Sender<()>>>) {
+    let (stop_sender, stop_receiver) = mpsc::channel();
+    let stop_sender = Arc::new(Mutex::new(stop_sender));
+
+    let capture_process = capture_screen_area(video_width, video_height, x, y, stop_receiver).unwrap();
+
+    (capture_process, stop_sender)
+}
+
+pub fn stop_screen_capture(capture_process: Arc<Mutex<Child>>, stop_sender: Arc<Mutex<Sender<()>>>) {
+    stop_sender.lock().unwrap().send(()).unwrap();
+    capture_process.lock().unwrap().wait().unwrap();
+    println!("Screen capture stopped.");
 }
