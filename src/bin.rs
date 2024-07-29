@@ -1,5 +1,6 @@
 use mpsc::{capture, caster, player};
 use std::env;
+use std::process::Command;
 use std::thread;
 
 pub fn main() {
@@ -28,4 +29,12 @@ fn setup_stream() {
     //TODO: STOP NON FUNZIONA
     thread::sleep(std::time::Duration::from_secs(2));
     capture::stop_screen_capture(capture_process, stop_sender);
+}
+
+fn ffmpeg_is_installed() -> bool {
+    let out = Command::new("ffmpeg")
+        .arg("-version")
+        .output()
+        .expect("Error in running child process");
+    out.status.success()
 }
