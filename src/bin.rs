@@ -2,6 +2,7 @@ use mpsc::{capture, caster, player};
 use std::env;
 use std::process::Command;
 use std::thread;
+use mpsc::capture::{start_screen_capture, stop_screen_capture};
 
 pub fn main() {
     let args: Vec<String> = env::args().collect();
@@ -21,18 +22,18 @@ pub fn main() {
 }
 
 fn setup_stream() {
-    let video_width = 800;
-    let video_height = 600;
-    let x = 200;
-    let y = 200;
+        let video_width = 800;
+        let video_height = 600;
+        let x = 0;
+        let y = 0;
 
-    let (capture_process, stop_sender) =
-        capture::start_screen_capture(video_width, video_height, x, y);
-    println!("Screen capture started successfully.");
+        let ffmpeg_command = start_screen_capture(video_width, video_height, x, y)
+            .expect("Failed to start screen capture");
 
-    //TODO: STOP NON FUNZIONA
-    thread::sleep(std::time::Duration::from_secs(2));
-    capture::stop_screen_capture(capture_process, stop_sender);
+        // Simulate some work
+        std::thread::sleep(std::time::Duration::from_secs(10));
+
+        stop_screen_capture(ffmpeg_command).expect("Failed to stop screen capture");
 }
 
 fn ffmpeg_is_installed() -> bool {
