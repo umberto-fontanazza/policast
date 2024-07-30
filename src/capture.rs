@@ -1,8 +1,5 @@
 use std::process::{Command, Child, Stdio};
-use std::io::{self, BufRead, BufReader};
-use std::thread;
-use std::sync::{Arc, Mutex};
-use std::sync::mpsc::{self, Sender, Receiver};
+use std::io::{self, Write};
 
 fn get_ffmpeg_args(video_width: u32, video_height: u32, x: u32, y: u32) -> Vec<String> {
     let crop_filter = format!("crop={}:{}:{}:{}", video_width, video_height, x, y);
@@ -11,13 +8,11 @@ fn get_ffmpeg_args(video_width: u32, video_height: u32, x: u32, y: u32) -> Vec<S
     let args = if cfg!(target_os = "macos") {
         vec![
             "-f", "avfoundation",
-            "-r", "30",
+            "-r", "25",
             "-i", "2",
             "-video_size", &video_size,
             "-vf", &crop_filter,
-            "-pix_fmt", "yuv420p",
             "-c:v", "libx264",
-            "-t","10", //TODO: RIMUOVERE
             "-f", "hls",
             "-hls_time", "2",
             "-hls_list_size", "0",
@@ -31,7 +26,6 @@ fn get_ffmpeg_args(video_width: u32, video_height: u32, x: u32, y: u32) -> Vec<S
             "-framerate", "30",
             "-i", "desktop",
             "-vf", &crop_filter,
-            "-pix_fmt", "yuv420p",
             "-c:v", "libx264",
             "-f", "hls",
             "-hls_time", "2",
@@ -47,7 +41,6 @@ fn get_ffmpeg_args(video_width: u32, video_height: u32, x: u32, y: u32) -> Vec<S
             "-s", &video_size,
             "-i", ":0.0",
             "-vf", &crop_filter,
-            "-pix_fmt", "yuv420p",
             "-c:v", "libx264",
             "-f", "hls",
             "-hls_time", "2",
@@ -63,62 +56,24 @@ fn get_ffmpeg_args(video_width: u32, video_height: u32, x: u32, y: u32) -> Vec<S
     args.into_iter().map(String::from).collect()
 }
 
-fn capture_screen_area(video_width: u32, video_height: u32, x: u32, y: u32, stop_receiver: Receiver<()>) -> io::Result<Arc<Mutex<Child>>> {
+pub fn start_screen_capture(video_width: u32, video_height: u32, x: u32, y: u32) -> io::Result<Child> {
     let ffmpeg_args = get_ffmpeg_args(video_width, video_height, x, y);
 
     let ffmpeg_command = Command::new("ffmpeg")
         .args(&ffmpeg_args)
-        .stdout(Stdio::piped())
-        .stderr(Stdio::piped())
+        .stdin(Stdio::piped())
         .spawn()?;
 
-    let ffmpeg_command = Arc::new(Mutex::new(ffmpeg_command));
-    let ffmpeg_command_clone = Arc::clone(&ffmpeg_command);
-
-    thread::spawn(move || {
-        let stdout = ffmpeg_command_clone.lock().unwrap().stdout.take().unwrap();
-        let stderr = ffmpeg_command_clone.lock().unwrap().stderr.take().unwrap();
-        let stdout_reader = BufReader::new(stdout);
-        let stderr_reader = BufReader::new(stderr);
-
-        let mut stdout_lines = stdout_reader.lines();
-        let mut stderr_lines = stderr_reader.lines();
-
-        loop {
-            if let Ok(_) = stop_receiver.try_recv() {
-                println!("Stop signal received.");
-                ffmpeg_command_clone.lock().unwrap().kill().unwrap();
-                break;
-            }
-
-            if let Some(line) = stdout_lines.next() {
-                if let Ok(line) = line {
-                    println!("{}", line);
-                }
-            }
-
-            if let Some(line) = stderr_lines.next() {
-                if let Ok(line) = line {
-                    eprintln!("{}", line);
-                }
-            }
-        }
-    });
+    println!("Screen capture started successfully.");
 
     Ok(ffmpeg_command)
 }
 
-pub fn start_screen_capture(video_width: u32, video_height: u32, x: u32, y: u32) -> (Arc<Mutex<Child>>, Arc<Mutex<Sender<()>>>) {
-    let (stop_sender, stop_receiver) = mpsc::channel();
-    let stop_sender = Arc::new(Mutex::new(stop_sender));
-
-    let capture_process = capture_screen_area(video_width, video_height, x, y, stop_receiver).unwrap();
-
-    (capture_process, stop_sender)
-}
-
-pub fn stop_screen_capture(capture_process: Arc<Mutex<Child>>, stop_sender: Arc<Mutex<Sender<()>>>) {
-    stop_sender.lock().unwrap().send(()).unwrap();
-    capture_process.lock().unwrap().wait().unwrap();
-    println!("Screen capture stopped.");
+pub fn stop_screen_capture(mut ffmpeg_command: Child) -> io::Result<()> {
+    if let Some(stdin) = ffmpeg_command.stdin.as_mut() {
+        writeln!(stdin, "q").expect("Failed to write to stdin");
+        ffmpeg_command.wait()?;
+        println!("Screen capture stopped successfully.");
+    }
+    Ok(())
 }
