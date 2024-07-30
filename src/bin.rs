@@ -5,6 +5,10 @@ use std::thread;
 
 pub fn main() {
     let args: Vec<String> = env::args().collect();
+    // if args.len() == 1 {
+    //     ffmpeg_list_devices();
+    //     return;
+    // }
     let peer_role = &args[1];
     if peer_role == "caster" {
         // caster::setup();
@@ -37,4 +41,32 @@ fn ffmpeg_is_installed() -> bool {
         .output()
         .expect("Error in running child process");
     out.status.success()
+}
+
+fn ffmpeg_list_devices() -> Result<Vec<String>, ()> {
+    if cfg!(target_os = "macos") {
+        let out = Command::new("ffmpeg")
+            // .args(["-version"])
+            .args([
+                // "-hide_banner",
+                // "-loglevel",
+                // "error",
+                "-f",
+                "avfoundation",
+                "-list_devices",
+                "true",
+                "-i",
+                "\"\"",
+            ])
+            .output()
+            .expect("Couldn't run command");
+        println!("{}", String::from_utf8(out.stderr).expect("Parse error"));
+    } else if cfg!(target_os = "windows") {
+        unimplemented!();
+    } else if cfg!(target_os = "linux") {
+        unimplemented!();
+    } else {
+        println!("Platform not supported!");
+    }
+    Err(())
 }
