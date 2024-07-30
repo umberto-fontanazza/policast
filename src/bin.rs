@@ -1,8 +1,8 @@
 use mpsc::{capture, caster, player};
-use std::env;
+use std::{env, io};
 use std::process::Command;
 use std::thread;
-use mpsc::capture::{start_screen_capture, stop_screen_capture};
+use mpsc::capture::{list_screen_capture_devices, start_screen_capture, stop_screen_capture};
 
 pub fn main() {
     let args: Vec<String> = env::args().collect();
@@ -10,7 +10,7 @@ pub fn main() {
     //     ffmpeg_list_devices();
     //     return;
     // }
-    let peer_role = &args[1];
+    let peer_role = "caster";
     if peer_role == "caster" {
         // caster::setup();
         setup_stream();
@@ -22,18 +22,32 @@ pub fn main() {
 }
 
 fn setup_stream() {
-        let video_width = 800;
-        let video_height = 600;
-        let x = 0;
-        let y = 0;
+    // List available capture devices
+    let devices = list_screen_capture_devices().expect("Devices error");
 
-        let ffmpeg_command = start_screen_capture(video_width, video_height, x, y)
-            .expect("Failed to start screen capture");
+    println!("Available screen capture devices:");
+    for (index, name) in &devices {
+        println!("[{}] {}", index, name);
+    }
 
-        // Simulate some work
-        std::thread::sleep(std::time::Duration::from_secs(10));
+    // Select the first available device
+    let target = devices.keys().next().expect("No devices found");
 
-        stop_screen_capture(ffmpeg_command).expect("Failed to stop screen capture");
+    let video_width = 1280;
+    let video_height = 720;
+    let x = 0;
+    let y = 0;
+
+    // Start screen capture
+    let ffmpeg_command = start_screen_capture(video_width, video_height, x, y, target).expect("ffmpeg start capture error");
+
+    // Wait for user input to stop the capture
+    println!("Press Enter to stop the screen capture...");
+    let mut input = String::new();
+    io::stdin().read_line(&mut input).unwrap();
+
+    // Stop screen capture
+    stop_screen_capture(ffmpeg_command).expect("ffmpeg stop capture error");
 }
 
 fn ffmpeg_is_installed() -> bool {
