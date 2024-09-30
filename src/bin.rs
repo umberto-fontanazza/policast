@@ -1,14 +1,21 @@
-use mpsc::{capture, caster, player};
+use eframe::run_native;
+use mpsc::{capture, caster, gui, player};
 use std::env;
 use std::process::Command;
 use std::thread;
 
 pub fn main() {
+    let my_gui = gui::Gui;
+    run_native(
+        "ciao",
+        eframe::NativeOptions::default(),
+        Box::new(|_| Ok(Box::new(my_gui))),
+    )
+    .expect("something wrong");
+}
+
+fn do_something() {
     let args: Vec<String> = env::args().collect();
-    // if args.len() == 1 {
-    //     ffmpeg_list_devices();
-    //     return;
-    // }
     let peer_role = &args[1];
     if peer_role == "caster" {
         // caster::setup();

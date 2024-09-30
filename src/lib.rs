@@ -1,5 +1,7 @@
 pub mod capture;
 pub mod caster;
+pub mod gui;
+pub mod hotkey;
 pub mod player;
 
 #[cfg(test)]
