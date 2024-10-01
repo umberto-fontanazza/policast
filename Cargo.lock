@@ -3,6 +3,7 @@
 version = 3
 
 [[package]]
+<<<<<<< HEAD
 name = "ab_glyph"
 version = "0.2.28"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -128,6 +129,8 @@ dependencies = [
 ]
 
 [[package]]
+=======
+>>>>>>> 3b98fb6fbeace297c6b9ff3c4a95923a1e04d8d9
 name = "aho-corasick"
 version = "1.1.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -137,6 +140,7 @@ dependencies = [
 ]
 
 [[package]]
+<<<<<<< HEAD
 name = "allocator-api2"
 version = "0.2.18"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -540,6 +544,8 @@ dependencies = [
 ]
 
 [[package]]
+=======
+>>>>>>> 3b98fb6fbeace297c6b9ff3c4a95923a1e04d8d9
 name = "byteorder"
 version = "1.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1659,6 +1665,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a7a70ba024b9dc04c27ea2f0c0548feb474ec5c54bba33a7f72f873a39d07b24"
 
 [[package]]
+<<<<<<< HEAD
 name = "malloc_buf"
 version = "0.0.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1668,12 +1675,15 @@ dependencies = [
 ]
 
 [[package]]
+=======
+>>>>>>> 3b98fb6fbeace297c6b9ff3c4a95923a1e04d8d9
 name = "memchr"
 version = "2.7.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "78ca9ab1a0babb1e7d5695e3530886289c18cf2f87ec19a575a0abdce112e3a3"
 
 [[package]]
+<<<<<<< HEAD
 name = "memmap2"
 version = "0.9.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1726,12 +1736,15 @@ dependencies = [
 ]
 
 [[package]]
+=======
+>>>>>>> 3b98fb6fbeace297c6b9ff3c4a95923a1e04d8d9
 name = "mpsc"
 version = "0.1.0"
 dependencies = [
  "eframe",
  "egui",
  "local-ip-address",
+ "regex",
 ]
 
 [[package]]
@@ -2315,6 +2328,7 @@ dependencies = [
 ]
 
 [[package]]
+<<<<<<< HEAD
 name = "rand"
 version = "0.8.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2373,6 +2387,12 @@ name = "regex"
 version = "1.11.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "38200e5ee88914975b69f657f0801b6f6dccafd44fd9326302a4aaeecfacb1d8"
+=======
+name = "regex"
+version = "1.10.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b91213439dad192326a0d7c6ee3955910425f441d7038e0d6933b0aec5c4517f"
+>>>>>>> 3b98fb6fbeace297c6b9ff3c4a95923a1e04d8d9
 dependencies = [
  "aho-corasick",
  "memchr",
@@ -2382,9 +2402,15 @@ dependencies = [
 
 [[package]]
 name = "regex-automata"
+<<<<<<< HEAD
 version = "0.4.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "368758f23274712b504848e9d5a6f010445cc8b87a7cdb4d7cbee666c1288da3"
+=======
+version = "0.4.7"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "38caf58cc5ef2fed281f89292ef23f6365465ed9a41b7a7754eb4e26496c92df"
+>>>>>>> 3b98fb6fbeace297c6b9ff3c4a95923a1e04d8d9
 dependencies = [
  "aho-corasick",
  "memchr",
@@ -2393,6 +2419,7 @@ dependencies = [
 
 [[package]]
 name = "regex-syntax"
+<<<<<<< HEAD
 version = "0.8.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2b15c43186be67a4fd63bee50d0303afffcef381492ebe2c5d87f324e1b8815c"
@@ -2469,6 +2496,11 @@ dependencies = [
  "smithay-client-toolkit",
  "tiny-skia",
 ]
+=======
+version = "0.8.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7a66a03ae7c801facd77a29370b4faec201768915ac14a721ba36f20bc9c209b"
+>>>>>>> 3b98fb6fbeace297c6b9ff3c4a95923a1e04d8d9
 
 [[package]]
 name = "serde"
