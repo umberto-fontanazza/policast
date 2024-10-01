@@ -6,7 +6,7 @@ use std::thread;
 use std::{env, io};
 
 pub fn main() {
-    let my_gui = gui::Gui;
+    let my_gui = gui::Gui::default();
     run_native(
         "ciao",
         eframe::NativeOptions::default(),
