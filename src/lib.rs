@@ -3,6 +3,7 @@ pub mod caster;
 pub mod gui;
 pub mod hotkey;
 pub mod player;
+pub mod playback;
 
 #[cfg(test)]
 mod tests {
