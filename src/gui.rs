@@ -1,3 +1,4 @@
+use crate::videocaster::VideoCaster;
 use eframe;
 use egui::TextEdit;
 use crate::playback::Playback;
@@ -15,6 +16,7 @@ pub struct Gui {
     route: Route,
     video_link: String,
     playback: Playback,
+    video_caster: VideoCaster,
 }
 
 impl eframe::App for Gui {
@@ -23,8 +25,13 @@ impl eframe::App for Gui {
             match self.route {
                 Route::SelectRole => {
                     ui.heading("Select your role");
+
                     if ui.button("Caster").clicked() {
                         self.route = Route::CasterRoot;
+                        // Carica i dispositivi di cattura all'ingresso
+                        if let Err(e) = self.video_caster.list_devices() {
+                            ui.label(format!("Error: {}", e));
+                        }
                     }
                     if ui.button("Player").clicked() {
                         self.route = Route::PlayerRoot;
@@ -32,6 +39,7 @@ impl eframe::App for Gui {
                 }
                 Route::CasterRoot => {
                     ui.heading("Caster root");
+                    self.caster_controls(ui);
                 }
                 Route::PlayerRoot => {
                     ui.heading("Player root");
@@ -68,4 +76,47 @@ impl Gui {
         // Show the video status and current frame
         self.playback.display_video_frame(ui, ctx); // Use the persistent playback instance to display the frame
     }
+
+    fn caster_controls(&mut self, ui: &mut egui::Ui) {
+        ui.label("Available screen capture devices:");
+
+        // Display the list of available devices
+        let device_list = self.video_caster.get_device_list();
+        ui.label(&device_list);
+
+        // Automatically select the first device if none is selected
+        if self.video_caster.get_selected_device().is_none() {
+            if let Some(first_device) = self.video_caster.get_first_device() {
+                if let Err(e) = self.video_caster.set_selected_device(first_device.clone()) {
+                    ui.label(format!("Error: {}", e));
+                } else {
+                    ui.label(format!("Automatically selected device: {}", first_device));
+                }
+            } else {
+                ui.label("No screen capture devices found.");
+            }
+        }
+
+        // Start recording when the button is pressed
+        if ui.button("Start Recording").clicked() {
+            if let Err(e) = self.video_caster.start_recording(2560, 1600, 0, 0) {
+                ui.label(format!("Error: {}", e));  // Show error if starting recording fails
+            }
+        }
+
+        // Stop recording when the button is pressed
+        if ui.button("Stop Recording").clicked() {
+            if let Err(e) = self.video_caster.stop_recording() {
+                ui.label(format!("Error: {}", e));  // Show error if stopping recording fails
+            }
+        }
+
+        // Display the recording status
+        ui.label(if self.video_caster.get_status() {
+            "Recording in progress..."  // Show if recording is in progress
+        } else {
+            "Not recording"  // Show if not recording
+        });
+    }
+
 }

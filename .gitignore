@@ -8,3 +8,4 @@
 # Platform-specific
 *.DS_Store
 
+Cargo.lock
