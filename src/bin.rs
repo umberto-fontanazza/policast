@@ -6,11 +6,10 @@ use std::thread;
 use std::{env, io};
 
 pub fn main() {
-    let my_gui = gui::Gui::default();
     run_native(
         "ciao",
         eframe::NativeOptions::default(),
-        Box::new(|_| Ok(Box::new(my_gui))),
+        Box::new(|cc| Ok(Box::new(gui::Gui::new(cc)))),
     )
     .expect("something wrong");
 }

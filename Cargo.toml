@@ -16,6 +16,7 @@ path = "src/bin.rs"
 [dependencies]
 eframe = "0.29.0"
 egui = "0.29.0"
+egui_extras ="0.29.1"
 local-ip-address = "0.6.1"
 regex = "1.10.5"
 image = "0.25.2"
