@@ -1,6 +1,6 @@
 use crate::videocaster::VideoCaster;
 use eframe;
-use egui::TextEdit;
+use egui::{TextEdit, Pos2};
 use crate::playback::Playback;
 use crate::hotkey::HotkeyManager;
 use egui::{Color32, TextureHandle};
@@ -21,6 +21,10 @@ pub struct Gui {
     playback: Playback,
     video_caster: VideoCaster,
     video_texture: TextureHandle,
+    selecting_area: bool,          // Flag per la selezione dell'area
+    start_point: Option<Pos2>,     // Punto iniziale della selezione
+    end_point: Option<Pos2>,       // Punto finale della selezione
+    selected_area: Option<(u32, u32, u32, u32)>, // Area selezionata (x, y, width, height)
 }
 
 impl Gui {
@@ -28,6 +32,9 @@ impl Gui {
         // egui_extras::install_image_loaders(ctx);
         Self {
             route: Route::default(),
+            video_link: "".to_string(),
+            playback: Default::default(),
+            video_caster: Default::default(),
             video_texture: cc.egui_ctx.load_texture(
                 "video-tex",
                 egui::ColorImage {
@@ -36,6 +43,10 @@ impl Gui {
                 },
                 egui::TextureOptions::NEAREST,
             ),
+            selecting_area: false,
+            start_point: None,
+            end_point: None,
+            selected_area: None,
         }
     }
 
@@ -125,8 +136,6 @@ impl Gui {
                     ui.label(format!("Error: {}", e));
                 } else {
                     ui.label(format!("Automatically selected device: {}", first_device));
-                    let pixels = vec![Color32::BLACK; VIDEO_SIZE[0] * VIDEO_SIZE[1]];
-                    self.render_video_frame(ctx, ui, pixels);
                 }
             } else {
                 ui.label("No screen capture devices found.");
@@ -135,8 +144,14 @@ impl Gui {
 
         // Start recording when the button is pressed
         if ui.button("Start Recording").clicked() {
-            if let Err(e) = self.video_caster.start_recording(2560, 1600, 0, 0) {
-                ui.label(format!("Error: {}", e));  // Show error if starting recording fails
+            if let Some((x, y, width, height)) = self.selected_area {
+                println!("x: {} y: {} width: {} height: {} ",x,y,width,height);
+                // Avvia la registrazione solo se è stata selezionata un'area
+                if let Err(e) = self.video_caster.start_recording(x, y, width, height) {
+                    ui.label(format!("Error: {}", e));  // Show error if starting recording fails
+                }
+            } else {
+                ui.label("Please select an area to record.");
             }
         }
 
@@ -153,6 +168,70 @@ impl Gui {
         } else {
             "Not recording"  // Show if not recording
         });
+
+        // Area selection UI
+        if ui.button("Start Area Selection").clicked() {
+            self.selecting_area = true;
+            self.start_point = None;
+            self.end_point = None;
+            self.selected_area = None;
+        }
+
+        // Handle the area selection
+        self.handle_area_selection(ui);
     }
 
+    fn handle_area_selection(&mut self, ui: &mut egui::Ui) {
+        let pointer = ui.input(|i| i.pointer.clone()); // Usa un closure per accedere al pointer
+
+        if self.selecting_area {
+            // Cattura il clic iniziale
+            if pointer.any_pressed() && self.start_point.is_none() {
+                if let Some(pos) = pointer.interact_pos() {
+                    self.start_point = Some(pos);
+                }
+            }
+
+            // Aggiorna il punto finale mentre si trascina
+            if pointer.primary_down() {
+                if let Some(pos) = pointer.interact_pos() {
+                    self.end_point = Some(pos);
+                }
+            }
+
+            // Rilascia il mouse per confermare la selezione
+            if pointer.any_released() && self.start_point.is_some() && self.end_point.is_some() {
+                if let (Some(start), Some(end)) = (self.start_point, self.end_point) {
+                    // Calcola l'area selezionata
+                    let x = start.x.min(end.x) as u32;
+                    let y = start.y.min(end.y) as u32;
+                    let width = (start.x - end.x).abs() as u32;
+                    let height = (start.y - end.y).abs() as u32;
+
+                    self.selected_area = Some((x, y, width, height));
+                    self.selecting_area = false; // Disabilita la selezione
+                }
+            }
+
+            // Disegna un rettangolo durante la selezione
+            if let (Some(start), Some(end)) = (self.start_point, self.end_point) {
+                let rect = egui::Rect::from_two_pos(start, end);
+                ui.painter().rect(
+                    rect,
+                    0.0,
+                    egui::Color32::from_rgba_premultiplied(150, 150, 200, 100),
+                    egui::Stroke::new(1.0, egui::Color32::WHITE),
+                );
+            }
+        }
+
+        // Mostra l'area selezionata se esiste
+        if let Some((x, y, width, height)) = self.selected_area {
+            ui.label(format!(
+                "Selected Area: Position ({}, {}), Size ({}, {})",
+                x, y, width, height
+            ));
+        }
+    }
 }
+
