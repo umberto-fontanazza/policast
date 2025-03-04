@@ -2,7 +2,6 @@ use eframe::run_native;
 use mpsc::gui;
 use mpsc::settings::Settings;
 use refbox::RefBox;
-use std::process::Command;
 
 pub fn main() {
     let settings = RefBox::new(Settings::default());
