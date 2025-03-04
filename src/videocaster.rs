@@ -48,8 +48,7 @@ impl VideoCaster {
                 .expect("Videocaster should have access to settings")
                 .try_borrow_mut()
                 .expect("Should be able to access settings")
-                .save_dir
-                .clone()
+                .get_save_dir()
         };
         if let Some(device) = &self.selected_device {
             self.ffmpeg_process = Some(capture::start_screen_capture(

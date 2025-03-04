@@ -2,7 +2,7 @@ use crate::playback::Playback;
 use crate::settings::Settings;
 use crate::videocaster::VideoCaster;
 use eframe;
-use egui::{Color32, TextBuffer, TextureHandle};
+use egui::{Color32, TextureHandle};
 use egui::{Pos2, TextEdit};
 use refbox::{Ref, RefBox};
 
@@ -83,7 +83,7 @@ impl Gui {
 }
 
 impl eframe::App for Gui {
-    fn update(&mut self, ctx: &egui::Context, frame: &mut eframe::Frame) {
+    fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         let rendered_route = self._route;
         egui::CentralPanel::default().show(ctx, |ui: &mut egui::Ui| {
             match self._route {
@@ -268,22 +268,23 @@ impl Gui {
 
     fn caster_settings(&mut self, ui: &mut egui::Ui) {
         if self.first_route_render {
-            println!("First render of route settings!");
-        };
-        let b = self
-            .settings
-            .try_borrow_mut()
-            .expect("Cannot borrow settings")
-            .save_dir
-            .clone();
-        ui.label("Select save directory:");
-        ui.label(format!(
-            "{}",
-            b.to_str().expect("Couldn't stringyfy pathbuf")
-        ));
+            let path = self.settings.try_borrow_mut().unwrap().get_save_dir();
+            self.text_buffer = path.to_str().unwrap().into();
+        }
+        ui.label("Edit save location: ");
         ui.add(egui::TextEdit::singleline(&mut self.text_buffer));
-        if ui.button("Apply").clicked() {
-            ui.label(format!("Applied ",));
+        if ui.button("Apply changes").clicked() {
+            match self
+                .settings
+                .try_borrow_mut()
+                .unwrap()
+                .set_save_dir(&self.text_buffer)
+            {
+                Ok(_) => (),
+                Err(_) => {
+                    todo!("Handle me");
+                }
+            }
         }
     }
 }
