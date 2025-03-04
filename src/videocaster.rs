@@ -1,4 +1,6 @@
 use crate::capture;
+use crate::settings::Settings;
+use refbox::Ref;
 use std::collections::HashMap;
 use std::io;
 use std::process::Child;
@@ -9,11 +11,13 @@ pub struct VideoCaster {
     selected_device: Option<String>,            // Dispositivo selezionato
     is_recording: bool,                         // Stato della registrazione
     ffmpeg_process: Option<Child>,              // Processo di registrazione
+    settings: Option<Ref<Settings>>,
 }
 
 impl VideoCaster {
-    pub fn new() -> Self {
+    pub fn new(settings: Ref<Settings>) -> Self {
         Self {
+            settings: Some(settings),
             ..Default::default()
         }
     }
@@ -38,6 +42,15 @@ impl VideoCaster {
         x: u32,
         y: u32,
     ) -> io::Result<()> {
+        let save_dir = {
+            self.settings
+                .as_ref()
+                .expect("Videocaster should have access to settings")
+                .try_borrow_mut()
+                .expect("Should be able to access settings")
+                .save_dir
+                .clone()
+        };
         if let Some(device) = &self.selected_device {
             self.ffmpeg_process = Some(capture::start_screen_capture(
                 video_width,
@@ -45,6 +58,7 @@ impl VideoCaster {
                 x,
                 y,
                 device,
+                &save_dir,
             )?);
             self.is_recording = true;
             println!("Recording started on device: {}", device);

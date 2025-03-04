@@ -1,8 +1,10 @@
 use crate::playback::Playback;
+use crate::settings::Settings;
 use crate::videocaster::VideoCaster;
 use eframe;
 use egui::{Color32, TextureHandle};
 use egui::{Pos2, TextEdit};
+use refbox::{Ref, RefBox};
 
 const VIDEO_SIZE: [usize; 2] = [1920, 1080];
 
@@ -15,6 +17,7 @@ enum Route {
 }
 
 pub struct Gui {
+    settings: Ref<Settings>,
     route: Route,
     video_link: String,
     playback: Playback,
@@ -27,13 +30,14 @@ pub struct Gui {
 }
 
 impl Gui {
-    pub fn new(cc: &eframe::CreationContext<'_>) -> Self {
+    pub fn new(cc: &eframe::CreationContext<'_>, s: &RefBox<Settings>) -> Self {
         // egui_extras::install_image_loaders(ctx);
         Self {
+            settings: s.create_ref(),
+            video_caster: VideoCaster::new(s.create_ref()),
             route: Route::default(),
             video_link: "".to_string(),
             playback: Default::default(),
-            video_caster: Default::default(),
             video_texture: cc.egui_ctx.load_texture(
                 "video-tex",
                 egui::ColorImage {
@@ -49,7 +53,12 @@ impl Gui {
         }
     }
 
-    fn render_video_frame(&mut self, ctx: &egui::Context, ui: &mut egui::Ui, pixels: Vec<Color32>) {
+    fn render_video_frame(
+        &mut self,
+        _ctx: &egui::Context,
+        ui: &mut egui::Ui,
+        pixels: Vec<Color32>,
+    ) {
         self.video_texture.set(
             egui::ColorImage {
                 size: VIDEO_SIZE,

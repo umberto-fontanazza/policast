@@ -1,6 +1,7 @@
 use regex::Regex;
 use std::collections::HashMap;
 use std::io::{self, Write};
+use std::path::Path;
 use std::process::{Child, Command, Stdio};
 
 fn list_screen_capture_devices_macos() -> io::Result<HashMap<String, String>> {
@@ -64,9 +65,12 @@ fn get_ffmpeg_args(
     x: u32,
     y: u32,
     target: &str,
+    save_dir: &Path,
 ) -> Vec<String> {
     let crop_filter = format!("crop={}:{}:{}:{}", video_width, video_height, x, y);
     let video_size = format!("{}x{}", video_width, video_height);
+    let segment_path = save_dir.join("output_%03d.ts");
+    let playlist_path = save_dir.join("output.m3u8");
 
     let args = if cfg!(target_os = "macos") {
         vec![
@@ -91,8 +95,8 @@ fn get_ffmpeg_args(
             "-hls_flags",
             "delete_segments",
             "-hls_segment_filename",
-            "target/output_%03d.ts",
-            "target/output.m3u8",
+            segment_path.to_str().expect("Couldn't stringify path"),
+            playlist_path.to_str().expect("Couldn't stringify path"),
         ]
     } else if cfg!(target_os = "windows") {
         vec![
@@ -157,8 +161,9 @@ pub fn start_screen_capture(
     x: u32,
     y: u32,
     target: &str,
+    save_dir: &Path,
 ) -> io::Result<Child> {
-    let ffmpeg_args = get_ffmpeg_args(video_width, video_height, x, y, target);
+    let ffmpeg_args = get_ffmpeg_args(video_width, video_height, x, y, target, save_dir);
 
     let ffmpeg_command = Command::new("ffmpeg")
         .args(&ffmpeg_args)
@@ -178,4 +183,12 @@ pub fn stop_screen_capture(mut ffmpeg_command: Child) -> io::Result<()> {
         println!("Screen capture stopped successfully.");
     }
     Ok(())
+}
+
+fn ffmpeg_is_installed() -> bool {
+    let out = Command::new("ffmpeg")
+        .arg("-version")
+        .output()
+        .expect("Error in running child process");
+    out.status.success()
 }
