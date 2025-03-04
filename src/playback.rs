@@ -1,10 +1,10 @@
+use eframe::egui;
+use egui::{ColorImage, Ui};
+use image::{ImageBuffer, Rgba};
 use std::io::Read;
 use std::process::{Command, Stdio};
 use std::sync::{Arc, Mutex};
-use std::{thread, time::Duration};
-use image::{ImageBuffer, Rgba};
-use egui::{Ui, ColorImage};
-use eframe::egui;
+use std::thread;
 
 #[derive(Default)]
 pub struct Playback {
@@ -42,12 +42,17 @@ impl Playback {
         thread::spawn(move || {
             let mut process = Command::new("ffmpeg")
                 .args(&[
-                    "-i", &video_link,                // Input the video link
-                    "-r", "30",
-                    "-vf", "fps=30,scale=1280:720,format=rgba", // Set resolution and format
-                    "-pix_fmt", "rgba",               // Set pixel format
-                    "-f", "rawvideo",                 // Set raw video output format
-                    "-",                              // Output to stdout
+                    "-i",
+                    &video_link, // Input the video link
+                    "-r",
+                    "30",
+                    "-vf",
+                    "fps=30,scale=1280:720,format=rgba", // Set resolution and format
+                    "-pix_fmt",
+                    "rgba", // Set pixel format
+                    "-f",
+                    "rawvideo", // Set raw video output format
+                    "-",        // Output to stdout
                 ])
                 .stdout(Stdio::piped())
                 .spawn()
@@ -60,7 +65,7 @@ impl Playback {
             // Continuously read the video frames from stdout
             while stdout.read_exact(&mut buffer).is_ok() {
                 frame_count += 1; // Increment frame counter
-                // Lock the frame buffer and update with the new frame
+                                  // Lock the frame buffer and update with the new frame
                 if let Ok(mut lock) = frame_buffer.lock() {
                     if let Some(frame) = ImageBuffer::from_raw(1280, 720, buffer.clone()) {
                         *lock = Some(frame);
@@ -76,14 +81,22 @@ impl Playback {
     pub fn stop_playback(&mut self) {
         if self.is_playing {
             self.is_playing = false; // Set playback status to false
-            self.frame_buffer.lock().expect("Failed to lock frame buffer").take(); // Clear the frame buffer
+            self.frame_buffer
+                .lock()
+                .expect("Failed to lock frame buffer")
+                .take(); // Clear the frame buffer
         }
     }
 
     // Function to display the current video frame in the GUI
     pub fn display_video_frame(&self, ui: &mut Ui, ctx: &egui::Context) {
         // Check if a frame is available and display it
-        if let Some(frame) = self.frame_buffer.lock().expect("Failed to lock frame buffer").as_ref() {
+        if let Some(frame) = self
+            .frame_buffer
+            .lock()
+            .expect("Failed to lock frame buffer")
+            .as_ref()
+        {
             let texture = ctx.load_texture(
                 "video_frame",
                 ColorImage::from_rgba_unmultiplied(

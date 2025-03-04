@@ -1,8 +1,7 @@
 use eframe::run_native;
 use mpsc::capture::{list_screen_capture_devices, start_screen_capture, stop_screen_capture};
-use mpsc::{capture, caster, gui, player};
+use mpsc::{gui, player};
 use std::process::Command;
-use std::thread;
 use std::{env, io};
 
 pub fn main() {

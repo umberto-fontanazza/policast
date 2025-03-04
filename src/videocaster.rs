@@ -1,15 +1,14 @@
 use crate::capture;
-use std::process::Child;
 use std::collections::HashMap;
-use std::time::Duration;
-use std::{io, thread};
+use std::io;
+use std::process::Child;
 
 #[derive(Default)]
 pub struct VideoCaster {
     available_devices: HashMap<String, String>, // Elenco dei dispositivi di cattura disponibili
-    selected_device: Option<String>,           // Dispositivo selezionato
-    is_recording: bool,                        // Stato della registrazione
-    ffmpeg_process: Option<Child>,             // Processo di registrazione
+    selected_device: Option<String>,            // Dispositivo selezionato
+    is_recording: bool,                         // Stato della registrazione
+    ffmpeg_process: Option<Child>,              // Processo di registrazione
 }
 
 impl VideoCaster {
@@ -35,7 +34,13 @@ impl VideoCaster {
     }
 
     /// Avvia la registrazione dello schermo
-    pub fn start_recording(&mut self, video_width: u32, video_height: u32, x: u32, y: u32) -> io::Result<()> {
+    pub fn start_recording(
+        &mut self,
+        video_width: u32,
+        video_height: u32,
+        x: u32,
+        y: u32,
+    ) -> io::Result<()> {
         if let Some(device) = &self.selected_device {
             self.ffmpeg_process = Some(capture::start_screen_capture(
                 video_width,
@@ -81,15 +86,15 @@ impl VideoCaster {
 
     // Getter to retrieve the selected device
     pub fn get_selected_device(&self) -> Option<String> {
-        self.selected_device.clone()  // Clone and return the selected device (if any)
+        self.selected_device.clone() // Clone and return the selected device (if any)
     }
 
     // Setter to set the selected device
     pub fn set_selected_device(&mut self, device: String) -> io::Result<()> {
         // Check if the device exists in the available devices
         if self.available_devices.contains_key(&device) {
-            self.selected_device = Some(device);  // Set the selected device
-            Ok(())  // Return Ok if the device is found
+            self.selected_device = Some(device); // Set the selected device
+            Ok(()) // Return Ok if the device is found
         } else {
             // Return an error if the device is not found
             Err(io::Error::new(

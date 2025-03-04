@@ -1,9 +1,8 @@
+use crate::playback::Playback;
 use crate::videocaster::VideoCaster;
 use eframe;
-use egui::{TextEdit, Pos2};
-use crate::playback::Playback;
-use crate::hotkey::HotkeyManager;
 use egui::{Color32, TextureHandle};
+use egui::{Pos2, TextEdit};
 
 const VIDEO_SIZE: [usize; 2] = [1920, 1080];
 
@@ -21,9 +20,9 @@ pub struct Gui {
     playback: Playback,
     video_caster: VideoCaster,
     video_texture: TextureHandle,
-    selecting_area: bool,          // Flag per la selezione dell'area
-    start_point: Option<Pos2>,     // Punto iniziale della selezione
-    end_point: Option<Pos2>,       // Punto finale della selezione
+    selecting_area: bool,      // Flag per la selezione dell'area
+    start_point: Option<Pos2>, // Punto iniziale della selezione
+    end_point: Option<Pos2>,   // Punto finale della selezione
     selected_area: Option<(u32, u32, u32, u32)>, // Area selezionata (x, y, width, height)
 }
 
@@ -107,7 +106,7 @@ impl Gui {
         if ui.button("Play").clicked() {
             if !self.video_link.is_empty() {
                 self.playback.set_video_link(self.video_link.clone()); // Set the video link in the playback instance
-                self.playback.start_playback();                        // Start the video playback
+                self.playback.start_playback(); // Start the video playback
             } else {
                 ui.label("Enter a valid link!");
             }
@@ -145,10 +144,10 @@ impl Gui {
         // Start recording when the button is pressed
         if ui.button("Start Recording").clicked() {
             if let Some((x, y, width, height)) = self.selected_area {
-                println!("x: {} y: {} width: {} height: {} ",x,y,width,height);
+                println!("x: {} y: {} width: {} height: {} ", x, y, width, height);
                 // Avvia la registrazione solo se è stata selezionata un'area
                 if let Err(e) = self.video_caster.start_recording(x, y, width, height) {
-                    ui.label(format!("Error: {}", e));  // Show error if starting recording fails
+                    ui.label(format!("Error: {}", e)); // Show error if starting recording fails
                 }
             } else {
                 ui.label("Please select an area to record.");
@@ -158,15 +157,15 @@ impl Gui {
         // Stop recording when the button is pressed
         if ui.button("Stop Recording").clicked() {
             if let Err(e) = self.video_caster.stop_recording() {
-                ui.label(format!("Error: {}", e));  // Show error if stopping recording fails
+                ui.label(format!("Error: {}", e)); // Show error if stopping recording fails
             }
         }
 
         // Display the recording status
         ui.label(if self.video_caster.get_status() {
-            "Recording in progress..."  // Show if recording is in progress
+            "Recording in progress..." // Show if recording is in progress
         } else {
-            "Not recording"  // Show if not recording
+            "Not recording" // Show if not recording
         });
 
         // Area selection UI
@@ -234,4 +233,3 @@ impl Gui {
         }
     }
 }
-

@@ -1,10 +1,10 @@
 pub mod capture;
 pub mod caster;
-pub mod videocaster;
 pub mod gui;
 pub mod hotkey;
-pub mod player;
 pub mod playback;
+pub mod player;
+pub mod videocaster;
 
 #[cfg(test)]
 mod tests {
