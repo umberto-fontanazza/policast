@@ -13,11 +13,8 @@ pub struct VideoCaster {
 
 impl VideoCaster {
     pub fn new() -> Self {
-        VideoCaster {
-            available_devices: HashMap::new(),
-            selected_device: None,
-            is_recording: false,
-            ffmpeg_process: None,
+        Self {
+            ..Default::default()
         }
     }
 
