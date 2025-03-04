@@ -2,23 +2,25 @@ use crate::playback::Playback;
 use crate::settings::Settings;
 use crate::videocaster::VideoCaster;
 use eframe;
-use egui::{Color32, TextureHandle};
+use egui::{Color32, TextBuffer, TextureHandle};
 use egui::{Pos2, TextEdit};
 use refbox::{Ref, RefBox};
 
 const VIDEO_SIZE: [usize; 2] = [1920, 1080];
 
-#[derive(Default)]
+#[derive(Default, Clone, Copy, PartialEq)]
 enum Route {
     #[default]
     SelectRole,
     CasterRoot,
+    CasterSettings,
     PlayerRoot,
 }
 
 pub struct Gui {
     settings: Ref<Settings>,
-    route: Route,
+    _route: Route,
+    first_route_render: bool, // to avoid repeated calculation for each render
     video_link: String,
     playback: Playback,
     video_caster: VideoCaster,
@@ -27,6 +29,7 @@ pub struct Gui {
     start_point: Option<Pos2>, // Punto iniziale della selezione
     end_point: Option<Pos2>,   // Punto finale della selezione
     selected_area: Option<(u32, u32, u32, u32)>, // Area selezionata (x, y, width, height)
+    text_buffer: String,
 }
 
 impl Gui {
@@ -35,7 +38,8 @@ impl Gui {
         Self {
             settings: s.create_ref(),
             video_caster: VideoCaster::new(s.create_ref()),
-            route: Route::default(),
+            _route: Route::default(),
+            first_route_render: true,
             video_link: "".to_string(),
             playback: Default::default(),
             video_texture: cc.egui_ctx.load_texture(
@@ -50,6 +54,7 @@ impl Gui {
             start_point: None,
             end_point: None,
             selected_area: None,
+            text_buffer: "Text goes here".to_owned(),
         }
     }
 
@@ -70,29 +75,29 @@ impl Gui {
         let sized_texture = egui::load::SizedTexture::new(&self.video_texture, size);
         ui.add(egui::Image::new(sized_texture).fit_to_exact_size(size));
     }
+
+    fn route_to(&mut self, destination: Route) {
+        self.first_route_render = true;
+        self._route = destination;
+    }
 }
 
 impl eframe::App for Gui {
     fn update(&mut self, ctx: &egui::Context, frame: &mut eframe::Frame) {
+        let rendered_route = self._route;
         egui::CentralPanel::default().show(ctx, |ui: &mut egui::Ui| {
-            match self.route {
+            match self._route {
                 Route::SelectRole => {
                     ui.heading("Select your role");
-
-                    if ui.button("Caster").clicked() {
-                        self.route = Route::CasterRoot;
-                        // Carica i dispositivi di cattura all'ingresso
-                        if let Err(e) = self.video_caster.list_devices() {
-                            ui.label(format!("Error: {}", e));
-                        }
-                    }
-                    if ui.button("Player").clicked() {
-                        self.route = Route::PlayerRoot;
-                    }
+                    self.select_role(ui);
                 }
                 Route::CasterRoot => {
                     ui.heading("Caster root");
                     self.caster_controls(ui);
+                }
+                Route::CasterSettings => {
+                    ui.heading("Caster settings");
+                    self.caster_settings(ui);
                 }
                 Route::PlayerRoot => {
                     ui.heading("Player root");
@@ -100,10 +105,26 @@ impl eframe::App for Gui {
                 }
             }
         });
+        if self._route == rendered_route {
+            self.first_route_render = false;
+        }
     }
 }
 
 impl Gui {
+    fn select_role(&mut self, ui: &mut egui::Ui) {
+        if ui.button("Caster").clicked() {
+            self.route_to(Route::CasterRoot);
+            // Carica i dispositivi di cattura all'ingresso
+            if let Err(e) = self.video_caster.list_devices() {
+                ui.label(format!("Error: {}", e));
+            }
+        }
+        if ui.button("Player").clicked() {
+            self.route_to(Route::PlayerRoot);
+        }
+    }
+
     // Separate function to manage video playback controls
     fn player_controls(&mut self, ui: &mut egui::Ui, ctx: &egui::Context) {
         ui.label("Enter the M3U link to play the video:");
@@ -131,6 +152,9 @@ impl Gui {
     }
 
     fn caster_controls(&mut self, ui: &mut egui::Ui) {
+        if ui.button("Go to settings").clicked() {
+            self.route_to(Route::CasterSettings);
+        }
         ui.label("Available screen capture devices:");
 
         // Display the list of available devices
@@ -239,6 +263,27 @@ impl Gui {
                 "Selected Area: Position ({}, {}), Size ({}, {})",
                 x, y, width, height
             ));
+        }
+    }
+
+    fn caster_settings(&mut self, ui: &mut egui::Ui) {
+        if self.first_route_render {
+            println!("First render of route settings!");
+        };
+        let b = self
+            .settings
+            .try_borrow_mut()
+            .expect("Cannot borrow settings")
+            .save_dir
+            .clone();
+        ui.label("Select save directory:");
+        ui.label(format!(
+            "{}",
+            b.to_str().expect("Couldn't stringyfy pathbuf")
+        ));
+        ui.add(egui::TextEdit::singleline(&mut self.text_buffer));
+        if ui.button("Apply").clicked() {
+            ui.label(format!("Applied ",));
         }
     }
 }
