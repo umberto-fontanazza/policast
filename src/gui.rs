@@ -19,7 +19,7 @@ enum Route {
 
 pub struct Gui {
     settings: Ref<Settings>,
-    _route: Route,
+    _route: Route, // don't set this, use self.route_to() instead. This is used to reuse calculations between renders.
     first_route_render: bool, // to avoid repeated calculation for each render
     video_link: String,
     playback: Playback,
