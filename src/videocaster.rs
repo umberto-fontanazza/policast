@@ -113,7 +113,7 @@ impl VideoCaster {
             ))
         }
     }
-    pub fn get_status(&self) -> bool {
+    pub fn get_is_recording(&self) -> bool {
         self.is_recording
     }
 
