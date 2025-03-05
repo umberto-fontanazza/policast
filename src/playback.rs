@@ -17,9 +17,8 @@ impl Playback {
     // Constructor to initialize the playback instance
     pub fn new() -> Self {
         Self {
-            is_playing: false,
             frame_buffer: Arc::new(Mutex::new(None)),
-            video_link: None, // Initialize video link as None
+            ..Default::default()
         }
     }
 
