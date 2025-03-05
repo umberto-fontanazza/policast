@@ -7,10 +7,10 @@ use std::process::Child;
 
 #[derive(Default)]
 pub struct VideoCaster {
-    available_devices: HashMap<String, String>, // Elenco dei dispositivi di cattura disponibili
-    selected_device: Option<String>,            // Dispositivo selezionato
-    is_recording: bool,                         // Stato della registrazione
-    ffmpeg_process: Option<Child>,              // Processo di registrazione
+    capture_devices: HashMap<String, String>, // Elenco dei dispositivi di cattura disponibili
+    selected_device: Option<String>,          // Dispositivo selezionato
+    is_recording: bool,                       // Stato della registrazione
+    ffmpeg_process: Option<Child>,            // Processo di registrazione
     settings: Option<Ref<Settings>>,
 }
 
@@ -22,16 +22,20 @@ impl VideoCaster {
         }
     }
 
-    /// Elenca i dispositivi di cattura disponibili
-    pub fn list_devices(&mut self) -> io::Result<()> {
-        self.available_devices = capture::list_screen_capture_devices()?;
-        if self.available_devices.is_empty() {
+    pub fn set_capture_devices(&mut self) -> io::Result<()> {
+        self.capture_devices = capture::list_screen_capture_devices()?;
+        if self.capture_devices.is_empty() {
             return Err(io::Error::new(
                 io::ErrorKind::NotFound,
                 "No screen capture devices found",
             ));
         }
         Ok(())
+    }
+
+    /// entries are like: (index of device, device name)
+    pub fn get_capture_devices(&self) -> HashMap<String, String> {
+        self.capture_devices.clone()
     }
 
     /// Avvia la registrazione dello schermo
@@ -85,15 +89,6 @@ impl VideoCaster {
         }
     }
 
-    /// Restituisce una lista dei dispositivi disponibili come stringa leggibile
-    pub fn get_device_list(&self) -> String {
-        self.available_devices
-            .iter()
-            .map(|(index, name)| format!("[{}] {}", index, name))
-            .collect::<Vec<_>>()
-            .join("\n")
-    }
-
     // Getter to retrieve the selected device
     pub fn get_selected_device(&self) -> Option<String> {
         self.selected_device.clone() // Clone and return the selected device (if any)
@@ -102,7 +97,7 @@ impl VideoCaster {
     // Setter to set the selected device
     pub fn set_selected_device(&mut self, device: String) -> io::Result<()> {
         // Check if the device exists in the available devices
-        if self.available_devices.contains_key(&device) {
+        if self.capture_devices.contains_key(&device) {
             self.selected_device = Some(device); // Set the selected device
             Ok(()) // Return Ok if the device is found
         } else {
@@ -119,6 +114,6 @@ impl VideoCaster {
 
     // FUNZIONE MOMENTANEA DI TEST
     pub fn get_first_device(&self) -> Option<String> {
-        self.available_devices.keys().next().cloned()
+        self.capture_devices.keys().next().cloned()
     }
 }

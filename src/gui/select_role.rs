@@ -5,7 +5,7 @@ impl Gui {
         if ui.button("Caster").clicked() {
             self.route_to(Route::CasterRoot);
             // Carica i dispositivi di cattura all'ingresso
-            if let Err(e) = self.video_caster.list_devices() {
+            if let Err(e) = self.video_caster.set_capture_devices() {
                 ui.label(format!("Error: {}", e));
             }
         }
