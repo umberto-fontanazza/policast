@@ -247,7 +247,7 @@ impl Gui {
                     rect,
                     0.0,
                     egui::Color32::from_rgba_premultiplied(150, 150, 200, 100),
-                    egui::Stroke::new(1.0, egui::Color32::WHITE),
+                    egui::Stroke::new(1.0, egui::Color32::GRAY),
                 );
             }
         }
@@ -265,6 +265,9 @@ impl Gui {
         if self.first_route_render {
             let path = self.settings.try_borrow_mut().unwrap().get_save_dir();
             self.text_buffer = path.to_str().unwrap().into();
+        }
+        if ui.button("Back").clicked() {
+            self.route_to(Route::CasterRoot);
         }
         ui.label("Edit save location: ");
         ui.add(egui::TextEdit::singleline(&mut self.text_buffer));
