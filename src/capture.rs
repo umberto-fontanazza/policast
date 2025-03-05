@@ -119,8 +119,8 @@ fn get_ffmpeg_args(
             "-hls_flags",
             "delete_segments",
             "-hls_segment_filename",
-            "target/output_%03d.ts",
-            "target/output.m3u8",
+            segment_path.to_str().expect("Couldn't stringify path"),
+            playlist_path.to_str().expect("Couldn't stringify path"),
         ]
     } else if cfg!(target_os = "linux") {
         vec![
@@ -145,8 +145,8 @@ fn get_ffmpeg_args(
             "-hls_flags",
             "delete_segments",
             "-hls_segment_filename",
-            "target/output_%03d.ts",
-            "target/output.m3u8",
+            segment_path.to_str().expect("Couldn't stringify path"),
+            playlist_path.to_str().expect("Couldn't stringify path"),
         ]
     } else {
         panic!("Unsupported operating system");
