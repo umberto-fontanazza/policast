@@ -4,6 +4,8 @@
 #IDE
 .idea/
 
+/output/**
+
 
 # Platform-specific
 *.DS_Store
