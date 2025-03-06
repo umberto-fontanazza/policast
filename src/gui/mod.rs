@@ -7,10 +7,7 @@ use crate::settings::Settings;
 use crate::videocaster::VideoCaster;
 use eframe;
 use egui::Pos2;
-use egui::{Color32, TextureHandle};
 use refbox::{Ref, RefBox};
-
-const VIDEO_SIZE: [usize; 2] = [1920, 1080];
 
 #[derive(Default, Clone, Copy, PartialEq)]
 enum Route {
@@ -28,7 +25,6 @@ pub struct Gui {
     video_link: String,
     playback: Playback,
     video_caster: VideoCaster,
-    video_texture: TextureHandle,
     selecting_area: bool,      // Flag per la selezione dell'area
     start_point: Option<Pos2>, // Punto iniziale della selezione
     end_point: Option<Pos2>,   // Punto finale della selezione
@@ -45,39 +41,13 @@ impl Gui {
             _route: Route::default(),
             first_route_render: true,
             video_link: "".to_string(),
-            playback: Default::default(),
-            video_texture: cc.egui_ctx.load_texture(
-                "video-tex",
-                egui::ColorImage {
-                    size: VIDEO_SIZE,
-                    pixels: vec![Color32::BLACK; VIDEO_SIZE[0] * VIDEO_SIZE[1]],
-                },
-                egui::TextureOptions::NEAREST,
-            ),
+            playback: Playback::new(&cc.egui_ctx),
             selecting_area: false,
             start_point: None,
             end_point: None,
             selected_area: None,
             text_buffer: "Text goes here".to_owned(),
         }
-    }
-
-    fn render_video_frame(
-        &mut self,
-        _ctx: &egui::Context,
-        ui: &mut egui::Ui,
-        pixels: Vec<Color32>,
-    ) {
-        self.video_texture.set(
-            egui::ColorImage {
-                size: VIDEO_SIZE,
-                pixels,
-            },
-            egui::TextureOptions::NEAREST,
-        );
-        let size = self.video_texture.size_vec2();
-        let sized_texture = egui::load::SizedTexture::new(&self.video_texture, size);
-        ui.add(egui::Image::new(sized_texture).fit_to_exact_size(size));
     }
 
     fn route_to(&mut self, destination: Route) {

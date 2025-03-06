@@ -1,23 +1,30 @@
 use eframe::egui;
-use egui::{ColorImage, Ui};
+use egui::{Color32, ColorImage, Image, TextureHandle, Ui};
 use image::{ImageBuffer, Rgba};
 use std::io::Read;
 use std::process::{Command, Stdio};
 use std::sync::{Arc, Mutex};
-use std::thread;
+use std::time::Duration;
+use std::{default, thread};
 
 #[derive(Default)]
 pub struct Playback {
     pub is_playing: bool, // Playback status
     pub frame_buffer: Arc<Mutex<Option<ImageBuffer<Rgba<u8>, Vec<u8>>>>>, // Buffer for video frames
     video_link: Option<String>, // Private variable to store the video link
+    texture: Option<TextureHandle>,
+    even: bool,
 }
 
 impl Playback {
-    // Constructor to initialize the playback instance
-    pub fn new() -> Self {
+    pub fn new(ctx: &egui::Context) -> Self {
         Self {
             frame_buffer: Arc::new(Mutex::new(None)),
+            texture: Some(ctx.load_texture(
+                "video-frame",
+                ColorImage::example(),
+                Default::default(),
+            )),
             ..Default::default()
         }
     }
@@ -88,7 +95,7 @@ impl Playback {
     }
 
     // Function to display the current video frame in the GUI
-    pub fn display_video_frame(&self, ui: &mut Ui, ctx: &egui::Context) {
+    pub fn display_video_frame(&mut self, ui: &mut Ui, ctx: &egui::Context) {
         // Check if a frame is available and display it
         if let Some(frame) = self
             .frame_buffer
@@ -96,17 +103,16 @@ impl Playback {
             .expect("Failed to lock frame buffer")
             .as_ref()
         {
-            let texture = ctx.load_texture(
-                "video_frame",
-                ColorImage::from_rgba_unmultiplied(
-                    [frame.width() as usize, frame.height() as usize],
-                    frame.as_raw(),
-                ),
-                Default::default(),
+            let texture = self.texture.as_mut().expect("Missing texture handle");
+            let image = ColorImage::from_rgba_unmultiplied(
+                [frame.width() as usize, frame.height() as usize],
+                frame.as_raw(),
             );
-            ui.image(&texture);
+            texture.set(image, Default::default());
+            ui.image(&(*texture));
+            ctx.request_repaint();
         } else {
-            ui.label("No frame available"); // Display a placeholder message if no frame
+            ui.label("No frame available");
         }
     }
 }
