@@ -64,20 +64,15 @@ impl Playback {
 
             let mut stdout = process.stdout.take().expect("Failed to take stdout");
             let mut buffer = vec![0u8; 1280 * 720 * 4]; // Assume 1280x720 RGBA format for the frame
-            let mut frame_count = 0; // Counter to track number of frames
 
             // Continuously read the video frames from stdout
             while stdout.read_exact(&mut buffer).is_ok() {
-                frame_count += 1; // Increment frame counter
-                                  // Lock the frame buffer and update with the new frame
                 if let Ok(mut lock) = frame_buffer.lock() {
                     if let Some(frame) = ImageBuffer::from_raw(1280, 720, buffer.clone()) {
                         *lock = Some(frame);
                     }
                 }
             }
-
-            println!("Total frames processed: {}", frame_count); // Print total frames at the end
         });
     }
 
