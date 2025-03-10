@@ -1,11 +1,10 @@
 use eframe::egui;
-use egui::{Color32, ColorImage, Image, TextureHandle, Ui};
+use egui::{ColorImage, TextureHandle, Ui};
 use image::{ImageBuffer, Rgba};
 use std::io::Read;
 use std::process::{Command, Stdio};
 use std::sync::{Arc, Mutex};
-use std::time::Duration;
-use std::{default, thread};
+use std::thread;
 
 #[derive(Default)]
 pub struct Playback {
@@ -13,7 +12,6 @@ pub struct Playback {
     pub frame_buffer: Arc<Mutex<Option<ImageBuffer<Rgba<u8>, Vec<u8>>>>>, // Buffer for video frames
     video_link: Option<String>, // Private variable to store the video link
     texture: Option<TextureHandle>,
-    even: bool,
 }
 
 impl Playback {
