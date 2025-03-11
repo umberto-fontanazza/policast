@@ -7,6 +7,10 @@ use std::sync::mpsc::{channel, Sender};
 use std::sync::{Arc, Mutex};
 use std::thread::{self, JoinHandle};
 
+const WIDTH: usize = 1280;
+const HEIGHT: usize = 720;
+const FPS: usize = 30;
+
 #[derive(Default)]
 pub struct Playback {
     pub is_playing: bool, // Playback status
@@ -52,9 +56,9 @@ impl Playback {
                     "-i",
                     &video_link, // Input the video link
                     "-r",
-                    "30",
+                    format!("{FPS}").as_str(),
                     "-vf",
-                    "fps=30,scale=1280:720,format=rgba", // Set resolution and format
+                    format!("fps={FPS},scale={WIDTH}:{HEIGHT},format=rgba").as_str(), // Set resolution and format
                     "-pix_fmt",
                     "rgba", // Set pixel format
                     "-f",
@@ -67,7 +71,7 @@ impl Playback {
                 .expect("Failed to start FFmpeg");
 
             let mut stdout = process.stdout.take().expect("Failed to take stdout");
-            let mut buffer = vec![0u8; 1280 * 720 * 4]; // Assume 1280x720 RGBA format for the frame
+            let mut buffer = vec![0u8; WIDTH * HEIGHT * 4];
 
             // Continuously read the video frames from stdout
             while stdout.read_exact(&mut buffer).is_ok() {
@@ -84,7 +88,11 @@ impl Playback {
                     },
                 }
                 if let Ok(mut lock) = frame_buffer.lock() {
-                    if let Some(frame) = ImageBuffer::from_raw(1280, 720, buffer.clone()) {
+                    if let Some(frame) = ImageBuffer::from_raw(
+                        u32::try_from(WIDTH).unwrap(),
+                        u32::try_from(HEIGHT).unwrap(),
+                        buffer.clone(),
+                    ) {
                         *lock = Some(frame);
                     }
                 }
