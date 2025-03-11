@@ -3,8 +3,9 @@ use egui::{ColorImage, TextureHandle, Ui};
 use image::{ImageBuffer, Rgba};
 use std::io::Read;
 use std::process::{Command, Stdio};
+use std::sync::mpsc::{channel, Sender};
 use std::sync::{Arc, Mutex};
-use std::thread;
+use std::thread::{self, JoinHandle};
 
 #[derive(Default)]
 pub struct Playback {
@@ -12,6 +13,7 @@ pub struct Playback {
     pub frame_buffer: Arc<Mutex<Option<ImageBuffer<Rgba<u8>, Vec<u8>>>>>, // Buffer for video frames
     video_link: Option<String>, // Private variable to store the video link
     texture: Option<TextureHandle>,
+    decoder_stop: Option<(Sender<()>, JoinHandle<()>)>, // send a unit to stop the raw video decoder
 }
 
 impl Playback {
@@ -27,25 +29,26 @@ impl Playback {
         }
     }
 
-    // Function to set the video link
     pub fn set_video_link(&mut self, link: String) {
         self.video_link = Some(link);
     }
 
-    // Function to start video playback
     pub fn start_playback(&mut self) {
         if self.is_playing || self.video_link.is_none() {
-            return; // Do nothing if already playing or if no link is set
+            return;
         }
 
         self.is_playing = true;
         let frame_buffer = Arc::clone(&self.frame_buffer);
         let video_link = self.video_link.clone().unwrap(); // Use the set video link
+        let (sender, receiver) = channel::<()>();
 
-        // Spawn a new thread to run FFmpeg for video processing
-        thread::spawn(move || {
+        let handle = thread::spawn(move || {
             let mut process = Command::new("ffmpeg")
                 .args(&[
+                    "-hide_banner",
+                    "-loglevel",
+                    "error",
                     "-i",
                     &video_link, // Input the video link
                     "-r",
@@ -58,6 +61,7 @@ impl Playback {
                     "rawvideo", // Set raw video output format
                     "-",        // Output to stdout
                 ])
+                .stdin(Stdio::piped())
                 .stdout(Stdio::piped())
                 .spawn()
                 .expect("Failed to start FFmpeg");
@@ -67,23 +71,40 @@ impl Playback {
 
             // Continuously read the video frames from stdout
             while stdout.read_exact(&mut buffer).is_ok() {
+                match receiver.try_recv() {
+                    Ok(_) => {
+                        break; // received signal to stop
+                    }
+                    Err(e) => match e {
+                        std::sync::mpsc::TryRecvError::Empty => {}
+                        std::sync::mpsc::TryRecvError::Disconnected => {
+                            println!("This shouldn't happen");
+                            break;
+                        }
+                    },
+                }
                 if let Ok(mut lock) = frame_buffer.lock() {
                     if let Some(frame) = ImageBuffer::from_raw(1280, 720, buffer.clone()) {
                         *lock = Some(frame);
                     }
                 }
             }
+            process.kill().expect("Couldn't kill process");
         });
+        self.decoder_stop = Some((sender, handle));
     }
 
-    // Function to stop video playback
     pub fn stop_playback(&mut self) {
         if self.is_playing {
-            self.is_playing = false; // Set playback status to false
+            self.is_playing = false;
             self.frame_buffer
                 .lock()
                 .expect("Failed to lock frame buffer")
                 .take(); // Clear the frame buffer
+            let (sender, handle) = self.decoder_stop.take().unwrap();
+            sender.send(()).unwrap();
+            handle.join().unwrap();
+            println!("Helper thread joined");
         }
     }
 
