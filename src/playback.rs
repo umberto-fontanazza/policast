@@ -3,18 +3,19 @@ use egui::{ColorImage, TextureHandle, Ui};
 use image::{ImageBuffer, Rgba};
 use std::io::Read;
 use std::process::{Command, Stdio};
-use std::sync::mpsc::{channel, Sender};
-use std::sync::{Arc, Mutex};
+use std::sync::mpsc::{channel, Receiver, Sender};
 use std::thread::{self, JoinHandle};
 
 const WIDTH: usize = 1280;
 const HEIGHT: usize = 720;
 const FPS: usize = 30;
 
+type Frame = ImageBuffer<Rgba<u8>, Vec<u8>>;
+
 #[derive(Default)]
 pub struct Playback {
     pub is_playing: bool, // Playback status
-    pub frame_buffer: Arc<Mutex<Option<ImageBuffer<Rgba<u8>, Vec<u8>>>>>, // Buffer for video frames
+    frame_receiver: Option<Receiver<Frame>>,
     video_link: Option<String>, // Private variable to store the video link
     texture: Option<TextureHandle>,
     decoder_stop: Option<(Sender<()>, JoinHandle<()>)>, // send a unit to stop the raw video decoder
@@ -23,7 +24,6 @@ pub struct Playback {
 impl Playback {
     pub fn new(ctx: &egui::Context) -> Self {
         Self {
-            frame_buffer: Arc::new(Mutex::new(None)),
             texture: Some(ctx.load_texture(
                 "video-frame",
                 ColorImage::example(),
@@ -43,9 +43,9 @@ impl Playback {
         }
 
         self.is_playing = true;
-        let frame_buffer = Arc::clone(&self.frame_buffer);
         let video_link = self.video_link.clone().unwrap(); // Use the set video link
         let (sender, receiver) = channel::<()>();
+        let (frame_sender, frame_receiver) = channel::<Frame>();
 
         let handle = thread::spawn(move || {
             let mut process = Command::new("ffmpeg")
@@ -87,54 +87,45 @@ impl Playback {
                         }
                     },
                 }
-                if let Ok(mut lock) = frame_buffer.lock() {
-                    if let Some(frame) = ImageBuffer::from_raw(
-                        u32::try_from(WIDTH).unwrap(),
-                        u32::try_from(HEIGHT).unwrap(),
-                        buffer.clone(),
-                    ) {
-                        *lock = Some(frame);
-                    }
-                }
+                let frame: Frame = ImageBuffer::from_raw(
+                    u32::try_from(WIDTH).unwrap(),
+                    u32::try_from(HEIGHT).unwrap(),
+                    buffer.clone(),
+                )
+                .expect("Couldn't create image buffer");
+                frame_sender
+                    .send(frame)
+                    .expect("Couldn't send frame over channel");
             }
             process.kill().expect("Couldn't kill process");
         });
         self.decoder_stop = Some((sender, handle));
+        self.frame_receiver = Some(frame_receiver);
     }
 
     pub fn stop_playback(&mut self) {
         if self.is_playing {
             self.is_playing = false;
-            self.frame_buffer
-                .lock()
-                .expect("Failed to lock frame buffer")
-                .take(); // Clear the frame buffer
             let (sender, handle) = self.decoder_stop.take().unwrap();
             sender.send(()).unwrap();
             handle.join().unwrap();
-            println!("Helper thread joined");
         }
     }
 
     // Function to display the current video frame in the GUI
     pub fn display_video_frame(&mut self, ui: &mut Ui, ctx: &egui::Context) {
-        // Check if a frame is available and display it
-        if let Some(frame) = self
-            .frame_buffer
-            .lock()
-            .expect("Failed to lock frame buffer")
-            .as_ref()
-        {
-            let texture = self.texture.as_mut().expect("Missing texture handle");
-            let image = ColorImage::from_rgba_unmultiplied(
-                [frame.width() as usize, frame.height() as usize],
-                frame.as_raw(),
-            );
-            texture.set(image, Default::default());
-            ui.image(&(*texture));
-            ctx.request_repaint();
-        } else {
-            ui.label("No frame available");
+        if !self.is_playing {
+            return;
         }
+
+        let frame = self.frame_receiver.as_ref().unwrap().recv().unwrap();
+        let texture = self.texture.as_mut().expect("Missing texture handle");
+        let image = ColorImage::from_rgba_unmultiplied(
+            [frame.width() as usize, frame.height() as usize],
+            frame.as_raw(),
+        );
+        texture.set(image, Default::default());
+        ui.image(&(*texture));
+        ctx.request_repaint();
     }
 }
