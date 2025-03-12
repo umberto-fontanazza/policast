@@ -2,6 +2,7 @@ use crate::decoder::Decoder;
 use eframe::egui;
 use egui::{ColorImage, TextureHandle, Ui};
 use image::{ImageBuffer, Rgba};
+use replace_with::replace_with_or_abort;
 
 pub const WIDTH: usize = 1280;
 pub const HEIGHT: usize = 720;
@@ -9,13 +10,21 @@ pub const FPS: usize = 30;
 
 pub type Frame = ImageBuffer<Rgba<u8>, Vec<u8>>;
 
-enum PlaybackStatus {
+#[derive(PartialEq)]
+pub enum PlaybackStatus {
+    Stopped,
+    Playing,
+    Paused,
+}
+
+enum Status {
     Stopped,
     Playing(Decoder),
+    Paused(Decoder),
 }
 
 pub struct Playback {
-    status: PlaybackStatus,
+    status: Status,
     video_link: Option<String>, // Private variable to store the video link
     texture: Option<TextureHandle>,
 }
@@ -23,7 +32,7 @@ pub struct Playback {
 impl Playback {
     pub fn new(ctx: &egui::Context) -> Self {
         Self {
-            status: PlaybackStatus::Stopped,
+            status: Status::Stopped,
             video_link: None,
             texture: Some(ctx.load_texture(
                 "video-frame",
@@ -37,40 +46,52 @@ impl Playback {
         self.video_link = Some(link);
     }
 
-    pub fn start_playback(&mut self) {
+    pub fn status(&self) -> PlaybackStatus {
         match self.status {
-            PlaybackStatus::Stopped => {
-                let video_url = self
-                    .video_link
+            Status::Stopped => PlaybackStatus::Stopped,
+            Status::Playing(_) => PlaybackStatus::Playing,
+            Status::Paused(_) => PlaybackStatus::Paused,
+        }
+    }
+
+    pub fn play(&mut self) {
+        replace_with_or_abort(&mut self.status, |status| match status {
+            Status::Stopped => Status::Playing(Decoder::new(
+                self.video_link
                     .as_ref()
                     .expect("video_url must be set before playing")
-                    .clone();
-                self.status = PlaybackStatus::Playing(Decoder::new(video_url));
+                    .clone(),
+            )),
+            Status::Paused(decoder) => Status::Playing(decoder),
+            playing => playing,
+        });
+    }
+
+    pub fn stop(&mut self) {
+        match self.status {
+            Status::Stopped => {
+                println!("Playback is already stopped")
             }
-            PlaybackStatus::Playing(_) => {
-                println!("Playback is already playing")
+            _ => {
+                self.status = Status::Stopped;
             }
         }
     }
 
-    pub fn stop_playback(&mut self) {
-        match self.status {
-            PlaybackStatus::Stopped => {
-                println!("Playback is already stopped")
-            }
-            PlaybackStatus::Playing(_) => {
-                self.status = PlaybackStatus::Stopped;
-            }
-        }
+    pub fn pause(&mut self) {
+        replace_with_or_abort(&mut self.status, |status| match status {
+            Status::Playing(decoder) => Status::Paused(decoder),
+            s => s,
+        });
     }
 
     // Function to display the current video frame in the GUI
     pub fn display_video_frame(&mut self, ui: &mut Ui, ctx: &egui::Context) {
         match self.status {
-            PlaybackStatus::Stopped => {
+            Status::Stopped => {
                 ui.label("Video is not playing");
             }
-            PlaybackStatus::Playing(ref decoder) => {
+            Status::Playing(ref decoder) => {
                 let frame: Frame = decoder.recv().expect("Failed to receive frame");
                 let texture = self.texture.as_mut().expect("Missing texture handle");
                 let image = ColorImage::from_rgba_unmultiplied(
@@ -80,6 +101,9 @@ impl Playback {
                 texture.set(image, Default::default());
                 ui.image(&(*texture));
                 ctx.request_repaint();
+            }
+            Status::Paused(_) => {
+                ui.image(self.texture.as_ref().unwrap());
             }
         }
     }
