@@ -1,3 +1,5 @@
+use std::time::{Duration, Instant};
+
 use crate::decoder::Decoder;
 use eframe::egui;
 use egui::{ColorImage, TextureHandle, Ui};
@@ -27,6 +29,7 @@ pub struct Playback {
     status: Status,
     video_link: Option<String>, // Private variable to store the video link
     texture: Option<TextureHandle>,
+    refresh_timestamp: Option<Instant>,
 }
 
 impl Playback {
@@ -39,6 +42,7 @@ impl Playback {
                 ColorImage::example(),
                 Default::default(),
             )),
+            refresh_timestamp: None,
         }
     }
 
@@ -74,13 +78,17 @@ impl Playback {
             }
             _ => {
                 self.status = Status::Stopped;
+                self.refresh_timestamp = None;
             }
         }
     }
 
     pub fn pause(&mut self) {
         replace_with_or_abort(&mut self.status, |status| match status {
-            Status::Playing(decoder) => Status::Paused(decoder),
+            Status::Playing(decoder) => {
+                self.refresh_timestamp = None;
+                Status::Paused(decoder)
+            }
             s => s,
         });
     }
@@ -91,20 +99,42 @@ impl Playback {
             Status::Stopped => {
                 ui.label("Video is not playing");
             }
-            Status::Playing(ref decoder) => {
-                let frame: Frame = decoder.recv().expect("Failed to receive frame");
-                let texture = self.texture.as_mut().expect("Missing texture handle");
-                let image = ColorImage::from_rgba_unmultiplied(
-                    [frame.width() as usize, frame.height() as usize],
-                    frame.as_raw(),
-                );
-                texture.set(image, Default::default());
-                ui.image(&(*texture));
-                ctx.request_repaint();
+            Status::Playing(_) => {
+                let now = Instant::now();
+                match self.refresh_timestamp {
+                    Some(t) => {
+                        let frame_period = Duration::from_millis(40); // (1000 ms / (FPS = 25)) = 40
+                        if now.duration_since(t) > frame_period {
+                            self.refresh_timestamp = Some(t + frame_period);
+                            self.next_frame(ui, ctx);
+                        } else {
+                            ui.image(self.texture.as_ref().unwrap());
+                            ctx.request_repaint();
+                        }
+                    }
+                    None => {
+                        self.refresh_timestamp = Some(now);
+                        self.next_frame(ui, ctx);
+                    }
+                }
             }
             Status::Paused(_) => {
                 ui.image(self.texture.as_ref().unwrap());
             }
+        }
+    }
+
+    fn next_frame(&mut self, ui: &mut Ui, ctx: &egui::Context) {
+        if let Status::Playing(decoder) = &mut self.status {
+            let frame: Frame = decoder.recv().expect("Failed to receive frame");
+            let texture = self.texture.as_mut().expect("Missing texture handle");
+            let image = ColorImage::from_rgba_unmultiplied(
+                [frame.width() as usize, frame.height() as usize],
+                frame.as_raw(),
+            );
+            texture.set(image, Default::default());
+            ui.image(&(*texture));
+            ctx.request_repaint();
         }
     }
 }
