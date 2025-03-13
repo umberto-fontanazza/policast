@@ -72,9 +72,9 @@ impl Decoder {
 
 impl Drop for Decoder {
     fn drop(&mut self) {
-        self.sender
-            .send(() as StopSignal)
-            .expect("Failed to send stop signal to decoder helper thread");
+        match self.sender.send(() as StopSignal) {
+            _ => (), // we don't care, the error case happens when the decoder finished before we stopped the video and was no longer needed.
+        };
         self.handle
             .take()
             .unwrap()
