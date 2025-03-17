@@ -5,6 +5,7 @@ pub mod gui;
 pub mod hotkey;
 pub mod playback;
 pub mod player;
+pub mod server;
 pub mod settings;
 pub mod videocaster;
 

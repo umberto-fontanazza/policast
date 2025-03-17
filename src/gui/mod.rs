@@ -3,6 +3,7 @@ mod caster_settings;
 mod player_controls;
 mod select_role;
 use crate::playback::Playback;
+use crate::server::Server;
 use crate::settings::Settings;
 use crate::videocaster::VideoCaster;
 use eframe;
@@ -30,6 +31,7 @@ pub struct Gui {
     end_point: Option<Pos2>,   // Punto finale della selezione
     selected_area: Option<(u32, u32, u32, u32)>, // Area selezionata (x, y, width, height)
     text_buffer: String,
+    hls_server: Option<Server>,
 }
 
 impl Gui {
@@ -47,6 +49,7 @@ impl Gui {
             end_point: None,
             selected_area: None,
             text_buffer: "Text goes here".to_owned(),
+            hls_server: None,
         }
     }
 

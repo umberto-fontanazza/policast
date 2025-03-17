@@ -2,9 +2,14 @@ mod area_selector;
 mod device_selector;
 mod recording_controls;
 use super::{Gui, Route};
+use crate::server::Server;
 
 impl Gui {
     pub fn caster_controls(&mut self, ui: &mut egui::Ui) {
+        if self.first_route_render {
+            self.hls_server = Some(Server::new());
+        }
+
         if ui.button("Go to settings").clicked() {
             self.route_to(Route::CasterSettings);
         }
