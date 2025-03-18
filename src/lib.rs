@@ -1,10 +1,10 @@
 pub mod capture;
-pub mod caster;
 pub mod decoder;
 pub mod gui;
 pub mod hotkey;
+pub mod old_caster;
+pub mod old_player;
 pub mod playback;
-pub mod player;
 pub mod server;
 pub mod settings;
 pub mod videocaster;
