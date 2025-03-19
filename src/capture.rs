@@ -72,7 +72,7 @@ fn get_ffmpeg_args(
     let segment_path = save_dir.join("output_%03d.ts");
     let playlist_path = save_dir.join("output.m3u8");
 
-    let args = if cfg!(target_os = "macos") {
+    let os_args = if cfg!(target_os = "macos") {
         vec![
             "-f",
             "avfoundation",
@@ -82,77 +82,37 @@ fn get_ffmpeg_args(
             target,
             "-video_size",
             &video_size,
-            "-vf",
-            &crop_filter,
-            "-c:v",
-            "libx264",
-            "-f",
-            "hls",
-            "-hls_time",
-            "2",
-            "-hls_list_size",
-            "0",
-            "-hls_flags",
-            "delete_segments",
-            "-hls_segment_filename",
-            segment_path.to_str().expect("Couldn't stringify path"),
-            playlist_path.to_str().expect("Couldn't stringify path"),
         ]
     } else if cfg!(target_os = "windows") {
-        vec![
-            "-f",
-            "gdigrab",
-            "-framerate",
-            "30",
-            "-i",
-            target,
-            "-vf",
-            &crop_filter,
-            "-c:v",
-            "libx264",
-            "-f",
-            "hls",
-            "-hls_time",
-            "2",
-            "-hls_list_size",
-            "0",
-            "-hls_flags",
-            "delete_segments",
-            "-hls_segment_filename",
-            segment_path.to_str().expect("Couldn't stringify path"),
-            playlist_path.to_str().expect("Couldn't stringify path"),
-        ]
+        vec!["-f", "gdigrab", "-framerate", "30", "-i", target]
     } else if cfg!(target_os = "linux") {
-        vec![
-            "-f",
-            "x11grab",
-            "-r",
-            "30",
-            "-s",
-            &video_size,
-            "-i",
-            target,
-            "-vf",
-            &crop_filter,
-            "-c:v",
-            "libx264",
-            "-f",
-            "hls",
-            "-hls_time",
-            "2",
-            "-hls_list_size",
-            "0",
-            "-hls_flags",
-            "delete_segments",
-            "-hls_segment_filename",
-            segment_path.to_str().expect("Couldn't stringify path"),
-            playlist_path.to_str().expect("Couldn't stringify path"),
-        ]
+        vec!["-f", "x11grab", "-r", "30", "-s", &video_size, "-i", target]
     } else {
         panic!("Unsupported operating system");
     };
+    let args = vec![
+        "-vf",
+        &crop_filter,
+        "-c:v",
+        "libx264",
+        "-f",
+        "hls",
+        "-hls_time",
+        "2",
+        "-hls_list_size",
+        "0",
+        "-hls_flags",
+        "delete_segments",
+        "-hls_segment_filename",
+        segment_path.to_str().expect("Couldn't stringify path"),
+        playlist_path.to_str().expect("Couldn't stringify path"),
+    ];
 
-    args.into_iter().map(String::from).collect()
+    os_args
+        .into_iter()
+        .chain(args.into_iter())
+        .map(String::from)
+        .collect()
 }
 
 pub fn start_screen_capture(
@@ -185,7 +145,7 @@ pub fn stop_screen_capture(mut ffmpeg_command: Child) -> io::Result<()> {
     Ok(())
 }
 
-fn ffmpeg_is_installed() -> bool {
+pub fn ffmpeg_is_installed() -> bool {
     let out = Command::new("ffmpeg")
         .arg("-version")
         .output()
