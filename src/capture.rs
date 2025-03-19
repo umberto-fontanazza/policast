@@ -36,7 +36,10 @@ fn list_screen_capture_devices_macos() -> io::Result<HashMap<String, String>> {
 }
 
 fn list_screen_capture_devices_windows() -> io::Result<HashMap<String, String>> {
-    unimplemented!()
+    Ok(HashMap::from([(
+        "desktop".to_string(),
+        "desktop".to_string(),
+    )]))
 }
 
 fn list_screen_capture_devices_linux() -> io::Result<HashMap<String, String>> {
