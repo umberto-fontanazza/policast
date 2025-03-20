@@ -24,7 +24,8 @@ impl Gui {
 
         ui.horizontal(|ui| {
             devices.into_iter().for_each(|(index, name)| {
-                let t = &self.thumbnail_textures.as_ref().unwrap()[0];
+                let parsed_index = index.parse::<usize>().expect("Should parse an usize") - 1; // -1 to get it 0 based
+                let t = &(self.thumbnail_textures.as_ref().unwrap()[parsed_index]);
                 let selected = selected_device
                     .as_ref()
                     .is_some_and(|device| device.eq(&index));
