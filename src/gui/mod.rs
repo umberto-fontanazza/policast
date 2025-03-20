@@ -7,7 +7,7 @@ use crate::server::Server;
 use crate::settings::Settings;
 use crate::videocaster::VideoCaster;
 use eframe;
-use egui::Pos2;
+use egui::{Pos2, TextureHandle};
 use refbox::{Ref, RefBox};
 
 #[derive(Default, Clone, Copy, PartialEq)]
@@ -21,6 +21,7 @@ enum Route {
 
 pub struct Gui {
     settings: Ref<Settings>,
+    thumbnail_textures: Option<Vec<TextureHandle>>, //used to preview the capture devices
     _route: Route, // don't set this, use self.route_to() instead. This is used to reuse calculations between renders.
     first_route_render: bool, // to avoid repeated calculation for each render
     video_link: String,
@@ -39,6 +40,7 @@ impl Gui {
         // egui_extras::install_image_loaders(ctx);
         Self {
             settings: s.create_ref(),
+            thumbnail_textures: None,
             video_caster: VideoCaster::new(s.create_ref()),
             _route: Route::default(),
             first_route_render: true,
@@ -70,7 +72,7 @@ impl eframe::App for Gui {
                 }
                 Route::CasterRoot => {
                     ui.heading("Caster root");
-                    self.caster_controls(ui);
+                    self.caster_controls(ui, ctx);
                 }
                 Route::CasterSettings => {
                     ui.heading("Caster settings");

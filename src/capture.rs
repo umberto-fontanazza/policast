@@ -1,3 +1,5 @@
+use egui::ColorImage;
+use image::{load_from_memory_with_format, RgbImage};
 use regex::Regex;
 use std::collections::HashMap;
 use std::io::{self, Write};
@@ -154,4 +156,46 @@ pub fn ffmpeg_is_installed() -> bool {
         .output()
         .expect("Error in running child process");
     out.status.success()
+}
+
+pub fn take_screenshot(source: &str) -> ColorImage {
+    let downsample_factor = "10";
+    if cfg!(target_os = "macos") {
+        let o = Command::new("ffmpeg")
+            .args([
+                "-f",
+                "avfoundation",
+                "-framerate",
+                "1",
+                "-i",
+                source,
+                "-frames:v",
+                "1",
+                "-vf",
+                &format!("scale=iw/{downsample_factor}:ih/{downsample_factor}"),
+                "-pix_fmt",
+                "rgba",
+                "-f",
+                "image2pipe",
+                "-vcodec",
+                "bmp",
+                "-",
+            ])
+            .output()
+            .unwrap()
+            .stdout;
+        bmp_to_image(o)
+    } else {
+        unimplemented!();
+    }
+}
+
+fn bmp_to_image(bmp_data: Vec<u8>) -> ColorImage {
+    let img = load_from_memory_with_format(&bmp_data, image::ImageFormat::Bmp)
+        .expect("Couldn't parse BPM to image");
+    let rgb_img: RgbImage = img.to_rgb8();
+    let (width, height) = rgb_img.dimensions();
+    let pixels = rgb_img.into_raw();
+    let color_image = ColorImage::from_rgb([width as usize, height as usize], &pixels);
+    color_image
 }
