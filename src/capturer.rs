@@ -44,13 +44,7 @@ impl Capturer {
     }
 
     /// Avvia la registrazione dello schermo
-    pub fn start_recording(
-        &mut self,
-        video_width: u32,
-        video_height: u32,
-        x: u32,
-        y: u32,
-    ) -> io::Result<()> {
+    pub fn start_recording(&mut self) -> io::Result<()> {
         let save_dir = {
             self.settings
                 .as_ref()
@@ -59,15 +53,17 @@ impl Capturer {
                 .expect("Should be able to access settings")
                 .get_save_dir()
         };
+        let area = match self.selected_area {
+            Some(area) => area,
+            None => {
+                return Err(io::Error::new(
+                    io::ErrorKind::InvalidInput,
+                    "No area selected",
+                ));
+            }
+        };
         if let Some(device) = &self.selected_device {
-            self.ffmpeg_process = Some(ffmpeg::start_screen_capture(
-                video_width,
-                video_height,
-                x,
-                y,
-                device,
-                &save_dir,
-            )?);
+            self.ffmpeg_process = Some(ffmpeg::start_screen_capture(area, device, &save_dir)?);
             self.is_recording = true;
             println!("Recording started on device: {}", device);
             Ok(())

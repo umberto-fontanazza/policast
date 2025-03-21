@@ -121,13 +121,11 @@ fn get_ffmpeg_args(
 }
 
 pub fn start_screen_capture(
-    video_width: u32,
-    video_height: u32,
-    x: u32,
-    y: u32,
+    area: (u32, u32, u32, u32),
     target: &str,
     save_dir: &Path,
 ) -> io::Result<Child> {
+    let (video_width, video_height, x, y) = area;
     let ffmpeg_args = get_ffmpeg_args(video_width, video_height, x, y, target, save_dir);
 
     let ffmpeg_command = Command::new("ffmpeg")

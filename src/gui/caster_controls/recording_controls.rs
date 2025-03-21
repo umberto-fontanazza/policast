@@ -7,7 +7,7 @@ impl Gui {
                 if let Some((x, y, width, height)) = self.capturer.selected_area {
                     println!("x: {} y: {} width: {} height: {} ", x, y, width, height);
                     // Avvia la registrazione solo se è stata selezionata un'area
-                    if let Err(e) = self.capturer.start_recording(x, y, width, height) {
+                    if let Err(e) = self.capturer.start_recording() {
                         ui.label(format!("Error: {}", e)); // Show error if starting recording fails
                     }
                 } else {
