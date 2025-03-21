@@ -56,18 +56,9 @@ impl Capturer {
         if !save_dir.is_dir() {
             std::fs::create_dir_all(&save_dir).expect("Should create dir if missing");
         }
-        let area = match self.selected_area {
-            Some(area) => area,
-            None => {
-                return Err(io::Error::new(
-                    io::ErrorKind::InvalidInput,
-                    "No area selected",
-                ));
-            }
-        };
         if let Some(device) = &self.selected_device {
             self.ffmpeg_process = Some(ffmpeg::start_screen_capture(
-                area.into(),
+                self.selected_area.map(|rect| ScreenCrop::from(rect)),
                 device,
                 &save_dir,
             )?);

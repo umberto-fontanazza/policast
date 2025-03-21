@@ -1,3 +1,4 @@
+use crate::capturer::ScreenCrop;
 use egui::ColorImage;
 use image::{load_from_memory_with_format, RgbImage};
 use regex::Regex;
@@ -64,13 +65,12 @@ pub fn list_screen_capture_devices() -> io::Result<HashMap<String, String>> {
     }
 }
 
-fn get_ffmpeg_args(
-    crop: crate::capturer::ScreenCrop,
-    target: &str,
-    save_dir: &Path,
-) -> Vec<String> {
-    let crop_filter = format!("crop={}:{}:{}:{}", crop.width, crop.height, crop.x, crop.y);
-    let video_size = format!("{}x{}", crop.width, crop.height);
+fn get_ffmpeg_args(crop: Option<ScreenCrop>, target: &str, save_dir: &Path) -> Vec<String> {
+    let crop_filter = match crop {
+        Some(ref crop) => format!("crop={}:{}:{}:{}", crop.width, crop.height, crop.x, crop.y),
+        None => "".to_string(),
+    };
+    // let video_size = format!("{}x{}", crop.width, crop.height);
     let segment_path = save_dir.join("output_%03d.ts");
     let playlist_path = save_dir.join("output.m3u8");
 
@@ -82,18 +82,21 @@ fn get_ffmpeg_args(
             "25",
             "-i",
             target,
-            "-video_size",
-            &video_size,
+            // "-video_size",
+            // &video_size,
         ]
     } else if cfg!(target_os = "windows") {
         vec!["-f", "gdigrab", "-framerate", "30", "-i", target]
     } else if cfg!(target_os = "linux") {
-        vec!["-f", "x11grab", "-r", "30", "-s", &video_size, "-i", target]
+        vec![
+            "-f", "x11grab", "-r", "30", // "-s", &video_size,
+            "-i", target,
+        ]
     } else {
         panic!("Unsupported operating system");
     };
     let args = vec![
-        "-vf",
+        if crop.is_some() { "-vf" } else { "" },
         &crop_filter,
         "-c:v",
         "libx264",
@@ -113,12 +116,13 @@ fn get_ffmpeg_args(
     os_args
         .into_iter()
         .chain(args.into_iter())
+        .filter(|arg| !arg.is_empty())
         .map(String::from)
         .collect()
 }
 
 pub fn start_screen_capture(
-    crop: crate::capturer::ScreenCrop,
+    crop: Option<ScreenCrop>,
     target: &str,
     save_dir: &Path,
 ) -> io::Result<Child> {
