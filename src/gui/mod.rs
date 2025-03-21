@@ -2,10 +2,10 @@ mod caster_controls;
 mod caster_settings;
 mod player_controls;
 mod select_role;
+use crate::capturer::Capturer;
 use crate::playback::Playback;
 use crate::server::Server;
 use crate::settings::Settings;
-use crate::videocaster::VideoCaster;
 use eframe;
 use egui::{Pos2, TextureHandle};
 use refbox::{Ref, RefBox};
@@ -26,7 +26,7 @@ pub struct Gui {
     first_route_render: bool, // to avoid repeated calculation for each render
     video_link: String,
     playback: Playback,
-    video_caster: VideoCaster,
+    video_caster: Capturer,
     selecting_area: bool,      // Flag per la selezione dell'area
     start_point: Option<Pos2>, // Punto iniziale della selezione
     end_point: Option<Pos2>,   // Punto finale della selezione
@@ -41,7 +41,7 @@ impl Gui {
         Self {
             settings: s.create_ref(),
             thumbnail_textures: None,
-            video_caster: VideoCaster::new(s.create_ref()),
+            video_caster: Capturer::new(s.create_ref()),
             _route: Route::default(),
             first_route_render: true,
             video_link: "".to_string(),

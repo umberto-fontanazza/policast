@@ -1,3 +1,4 @@
+pub mod capturer;
 pub mod decoder;
 pub mod ffmpeg;
 pub mod gui;
@@ -5,7 +6,6 @@ pub mod hotkey;
 pub mod playback;
 pub mod server;
 pub mod settings;
-pub mod videocaster;
 
 #[cfg(test)]
 mod tests {

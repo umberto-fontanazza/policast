@@ -6,7 +6,7 @@ use std::io;
 use std::process::Child;
 
 #[derive(Default)]
-pub struct VideoCaster {
+pub struct Capturer {
     capture_devices: HashMap<String, String>, // Elenco dei dispositivi di cattura disponibili
     selected_device: Option<String>,          // Dispositivo selezionato
     is_recording: bool,                       // Stato della registrazione
@@ -14,7 +14,7 @@ pub struct VideoCaster {
     settings: Option<Ref<Settings>>,
 }
 
-impl VideoCaster {
+impl Capturer {
     pub fn new(settings: Ref<Settings>) -> Self {
         Self {
             settings: Some(settings),
