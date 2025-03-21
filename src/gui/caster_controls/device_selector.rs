@@ -5,8 +5,8 @@ use egui::TextureHandle;
 
 impl Gui {
     pub fn device_selector(&mut self, ui: &mut egui::Ui, ctx: &egui::Context) {
-        let devices = self.video_caster.get_capture_devices();
-        let selected_device = self.video_caster.get_selected_device();
+        let devices = self.capturer.get_capture_devices();
+        let selected_device = self.capturer.get_selected_device();
 
         if self.first_route_render & self.thumbnail_textures.is_none() {
             let textures = devices
@@ -34,7 +34,7 @@ impl Gui {
 
                 ui.vertical(|ui| {
                     if ui.add(img_button).clicked() || ui.add(button).clicked() {
-                        self.video_caster
+                        self.capturer
                             .set_selected_device(index)
                             .expect("Couldn't set the selected device");
                     }

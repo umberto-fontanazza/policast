@@ -21,10 +21,10 @@ impl Gui {
 
         // Area selection UI
         if ui.button("Start Area Selection").clicked() {
-            self.selecting_area = true;
-            self.start_point = None;
-            self.end_point = None;
-            self.selected_area = None;
+            self.capturer.selecting_area = true;
+            self.capturer.start_point = None;
+            self.capturer.end_point = None;
+            self.capturer.selected_area = None;
         }
 
         // Handle the area selection

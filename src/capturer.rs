@@ -1,5 +1,6 @@
 use crate::ffmpeg;
 use crate::settings::Settings;
+use egui::Pos2;
 use refbox::Ref;
 use std::collections::HashMap;
 use std::io;
@@ -12,6 +13,10 @@ pub struct Capturer {
     is_recording: bool,                       // Stato della registrazione
     ffmpeg_process: Option<Child>,            // Processo di registrazione
     settings: Option<Ref<Settings>>,
+    pub selecting_area: bool, // Flag per la selezione dell'area
+    pub selected_area: Option<(u32, u32, u32, u32)>, // Area selezionata (x, y, width, height)
+    pub start_point: Option<Pos2>, // Punto iniziale della selezione
+    pub end_point: Option<Pos2>, // Punto finale della selezione
 }
 
 impl Capturer {

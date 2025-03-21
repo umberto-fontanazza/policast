@@ -7,7 +7,7 @@ use crate::playback::Playback;
 use crate::server::Server;
 use crate::settings::Settings;
 use eframe;
-use egui::{Pos2, TextureHandle};
+use egui::TextureHandle;
 use refbox::{Ref, RefBox};
 
 #[derive(Default, Clone, Copy, PartialEq)]
@@ -26,11 +26,7 @@ pub struct Gui {
     first_route_render: bool, // to avoid repeated calculation for each render
     video_link: String,
     playback: Playback,
-    video_caster: Capturer,
-    selecting_area: bool,      // Flag per la selezione dell'area
-    start_point: Option<Pos2>, // Punto iniziale della selezione
-    end_point: Option<Pos2>,   // Punto finale della selezione
-    selected_area: Option<(u32, u32, u32, u32)>, // Area selezionata (x, y, width, height)
+    capturer: Capturer,
     text_buffer: String,
     hls_server: Option<Server>,
 }
@@ -41,15 +37,11 @@ impl Gui {
         Self {
             settings: s.create_ref(),
             thumbnail_textures: None,
-            video_caster: Capturer::new(s.create_ref()),
+            capturer: Capturer::new(s.create_ref()),
             _route: Route::default(),
             first_route_render: true,
             video_link: "".to_string(),
             playback: Playback::new(&cc.egui_ctx),
-            selecting_area: false,
-            start_point: None,
-            end_point: None,
-            selected_area: None,
             text_buffer: "Text goes here".to_owned(),
             hls_server: None,
         }
