@@ -1,4 +1,4 @@
-use crate::capture::take_screenshot;
+use crate::ffmpeg::take_screenshot;
 
 use super::Gui;
 use egui::TextureHandle;

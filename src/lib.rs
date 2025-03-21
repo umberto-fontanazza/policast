@@ -1,5 +1,5 @@
-pub mod capture;
 pub mod decoder;
+pub mod ffmpeg;
 pub mod gui;
 pub mod hotkey;
 pub mod playback;

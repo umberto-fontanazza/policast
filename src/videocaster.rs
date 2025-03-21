@@ -1,4 +1,4 @@
-use crate::capture;
+use crate::ffmpeg;
 use crate::settings::Settings;
 use refbox::Ref;
 use std::collections::HashMap;
@@ -23,7 +23,7 @@ impl VideoCaster {
     }
 
     pub fn set_capture_devices(&mut self) -> io::Result<()> {
-        self.capture_devices = capture::list_screen_capture_devices()?;
+        self.capture_devices = ffmpeg::list_screen_capture_devices()?;
         if self.capture_devices.is_empty() {
             return Err(io::Error::new(
                 io::ErrorKind::NotFound,
@@ -55,7 +55,7 @@ impl VideoCaster {
                 .get_save_dir()
         };
         if let Some(device) = &self.selected_device {
-            self.ffmpeg_process = Some(capture::start_screen_capture(
+            self.ffmpeg_process = Some(ffmpeg::start_screen_capture(
                 video_width,
                 video_height,
                 x,
@@ -77,7 +77,7 @@ impl VideoCaster {
     /// Interrompe la registrazione dello schermo
     pub fn stop_recording(&mut self) -> io::Result<()> {
         if let Some(process) = self.ffmpeg_process.take() {
-            capture::stop_screen_capture(process)?;
+            ffmpeg::stop_screen_capture(process)?;
             self.is_recording = false;
             println!("Recording stopped.");
             Ok(())
