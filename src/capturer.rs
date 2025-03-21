@@ -1,6 +1,6 @@
 use crate::ffmpeg;
 use crate::settings::Settings;
-use egui::Pos2;
+use egui::{Pos2, Rect};
 use refbox::Ref;
 use std::collections::HashMap;
 use std::io;
@@ -14,9 +14,9 @@ pub struct Capturer {
     ffmpeg_process: Option<Child>,            // Processo di registrazione
     settings: Option<Ref<Settings>>,
     pub selecting_area: bool, // Flag per la selezione dell'area
-    pub selected_area: Option<(u32, u32, u32, u32)>, // Area selezionata (x, y, width, height)
+    pub selected_area: Option<Rect>,
     pub start_point: Option<Pos2>, // Punto iniziale della selezione
-    pub end_point: Option<Pos2>, // Punto finale della selezione
+    pub end_point: Option<Pos2>,   // Punto finale della selezione
 }
 
 impl Capturer {
@@ -53,6 +53,9 @@ impl Capturer {
                 .expect("Should be able to access settings")
                 .get_save_dir()
         };
+        if !save_dir.is_dir() {
+            std::fs::create_dir_all(&save_dir).expect("Should create dir if missing");
+        }
         let area = match self.selected_area {
             Some(area) => area,
             None => {
@@ -63,7 +66,11 @@ impl Capturer {
             }
         };
         if let Some(device) = &self.selected_device {
-            self.ffmpeg_process = Some(ffmpeg::start_screen_capture(area, device, &save_dir)?);
+            self.ffmpeg_process = Some(ffmpeg::start_screen_capture(
+                area.into(),
+                device,
+                &save_dir,
+            )?);
             self.is_recording = true;
             println!("Recording started on device: {}", device);
             Ok(())
@@ -118,3 +125,27 @@ impl Capturer {
         self.capture_devices.keys().next().cloned()
     }
 }
+
+/**
+ * Rect is used for portion of the application window, ScreenCrop is used to identify a portion of the screen
+ */
+pub struct ScreenCrop {
+    pub x: u32,
+    pub y: u32,
+    pub width: u32,
+    pub height: u32,
+}
+
+impl From<egui::Rect> for ScreenCrop {
+    //TODO: this conversion doesn't take into account the window offset
+    fn from(value: egui::Rect) -> Self {
+        Self {
+            x: value.left() as u32,
+            y: value.top() as u32,
+            width: value.width() as u32,
+            height: value.height() as u32,
+        }
+    }
+}
+
+impl ScreenCrop {}

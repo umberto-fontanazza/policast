@@ -12,17 +12,10 @@ impl Gui {
         ui.label("Edit save location: ");
         ui.add(egui::TextEdit::singleline(&mut self.text_buffer));
         if ui.button("Apply changes").clicked() {
-            match self
-                .settings
+            self.settings
                 .try_borrow_mut()
                 .unwrap()
                 .set_save_dir(&self.text_buffer)
-            {
-                Ok(_) => (),
-                Err(_) => {
-                    todo!("Handle me");
-                }
-            }
         }
     }
 }

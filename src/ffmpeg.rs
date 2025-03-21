@@ -65,15 +65,12 @@ pub fn list_screen_capture_devices() -> io::Result<HashMap<String, String>> {
 }
 
 fn get_ffmpeg_args(
-    video_width: u32,
-    video_height: u32,
-    x: u32,
-    y: u32,
+    crop: crate::capturer::ScreenCrop,
     target: &str,
     save_dir: &Path,
 ) -> Vec<String> {
-    let crop_filter = format!("crop={}:{}:{}:{}", video_width, video_height, x, y);
-    let video_size = format!("{}x{}", video_width, video_height);
+    let crop_filter = format!("crop={}:{}:{}:{}", crop.width, crop.height, crop.x, crop.y);
+    let video_size = format!("{}x{}", crop.width, crop.height);
     let segment_path = save_dir.join("output_%03d.ts");
     let playlist_path = save_dir.join("output.m3u8");
 
@@ -121,12 +118,11 @@ fn get_ffmpeg_args(
 }
 
 pub fn start_screen_capture(
-    area: (u32, u32, u32, u32),
+    crop: crate::capturer::ScreenCrop,
     target: &str,
     save_dir: &Path,
 ) -> io::Result<Child> {
-    let (video_width, video_height, x, y) = area;
-    let ffmpeg_args = get_ffmpeg_args(video_width, video_height, x, y, target, save_dir);
+    let ffmpeg_args = get_ffmpeg_args(crop, target, save_dir);
 
     let ffmpeg_command = Command::new("ffmpeg")
         .args(&ffmpeg_args)

@@ -1,3 +1,5 @@
+use egui::Rect;
+
 use super::Gui;
 
 impl Gui {
@@ -25,18 +27,12 @@ impl Gui {
                 && capturer.end_point.is_some()
             {
                 if let (Some(start), Some(end)) = (capturer.start_point, capturer.end_point) {
-                    // Calcola l'area selezionata
-                    let x = start.x.min(end.x) as u32;
-                    let y = start.y.min(end.y) as u32;
-                    let width = (start.x - end.x).abs() as u32;
-                    let height = (start.y - end.y).abs() as u32;
-
-                    capturer.selected_area = Some((x, y, width, height));
-                    capturer.selecting_area = false; // Disabilita la selezione
+                    capturer.selected_area = Some(Rect::from_two_pos(start, end));
+                    capturer.selecting_area = false;
                 }
             }
 
-            // Disegna un rettangolo durante la selezione
+            // Display area being selected
             if let (Some(start), Some(end)) = (capturer.start_point, capturer.end_point) {
                 let rect = egui::Rect::from_two_pos(start, end);
                 ui.painter().rect(
@@ -48,11 +44,11 @@ impl Gui {
             }
         }
 
-        // Mostra l'area selezionata se esiste
-        if let Some((x, y, width, height)) = capturer.selected_area {
+        // Debug information on area selection
+        if let Some(area) = capturer.selected_area {
+            let (x, y, width, height) = (area.left(), area.top(), area.width(), area.height());
             ui.label(format!(
-                "Selected Area: Position ({}, {}), Size ({}, {})",
-                x, y, width, height
+                "Selected Area: Position ({x}, {y}), Size ({width}, {height})"
             ));
         }
     }
