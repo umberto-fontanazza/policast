@@ -94,7 +94,7 @@ impl Playback {
     }
 
     // Function to display the current video frame in the GUI
-    pub fn display_video_frame(&mut self, ui: &mut Ui, ctx: &egui::Context) {
+    pub fn render(&mut self, ui: &mut Ui, ctx: &egui::Context) {
         match self.status {
             Status::Stopped => {
                 ui.label("Video is not playing");

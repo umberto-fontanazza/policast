@@ -33,6 +33,6 @@ impl Gui {
             self.playback.pause();
         }
 
-        self.playback.display_video_frame(ui, ctx);
+        self.playback.render(ui, ctx);
     }
 }
