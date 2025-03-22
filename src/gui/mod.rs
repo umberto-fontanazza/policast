@@ -69,7 +69,7 @@ impl eframe::App for Gui {
                 }
                 Route::CasterControls => {
                     ui.heading("Caster root");
-                    self.caster_controls(ui, ctx);
+                    self.caster_controls(ui);
                 }
                 Route::CasterSettings => {
                     ui.heading("Caster settings");

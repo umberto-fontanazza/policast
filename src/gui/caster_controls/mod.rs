@@ -5,7 +5,7 @@ use super::{Gui, Route};
 use crate::server::Server;
 
 impl Gui {
-    pub fn caster_controls(&mut self, ui: &mut egui::Ui, ctx: &egui::Context) {
+    pub fn caster_controls(&mut self, ui: &mut egui::Ui) {
         if self.first_route_render & self.hls_server.is_none() {
             self.hls_server = Some(Server::new());
         }
