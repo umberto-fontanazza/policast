@@ -15,8 +15,6 @@ impl Gui {
         }
         ui.label("Available screen capture devices:");
 
-        self.device_selector(ui, ctx);
-
         self.recording_controls(ui);
 
         // Area selection UI

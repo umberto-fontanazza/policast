@@ -14,6 +14,7 @@ use refbox::{Ref, RefBox};
 enum Route {
     #[default]
     SelectRole,
+    CasterDeviceSelection,
     CasterControls,
     CasterSettings,
     PlayerControls,
@@ -61,6 +62,10 @@ impl eframe::App for Gui {
                 Route::SelectRole => {
                     ui.heading("Select your role");
                     self.select_role(ui);
+                }
+                Route::CasterDeviceSelection => {
+                    ui.heading("Capture device selection");
+                    self.device_selector(ui, ctx);
                 }
                 Route::CasterControls => {
                     ui.heading("Caster root");

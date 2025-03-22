@@ -1,6 +1,6 @@
-use crate::ffmpeg::take_screenshot;
-
 use super::Gui;
+use crate::ffmpeg::take_screenshot;
+use crate::gui::Route;
 use egui::TextureHandle;
 
 impl Gui {
@@ -37,6 +37,7 @@ impl Gui {
                         self.capturer
                             .set_selected_device(index)
                             .expect("Couldn't set the selected device");
+                        self.route_to(Route::CasterControls);
                     }
                 });
             });
