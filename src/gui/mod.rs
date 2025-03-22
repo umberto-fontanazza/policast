@@ -14,9 +14,9 @@ use refbox::{Ref, RefBox};
 enum Route {
     #[default]
     SelectRole,
-    CasterRoot,
+    CasterControls,
     CasterSettings,
-    PlayerRoot,
+    PlayerControls,
 }
 
 pub struct Gui {
@@ -62,7 +62,7 @@ impl eframe::App for Gui {
                     ui.heading("Select your role");
                     self.select_role(ui);
                 }
-                Route::CasterRoot => {
+                Route::CasterControls => {
                     ui.heading("Caster root");
                     self.caster_controls(ui, ctx);
                 }
@@ -70,7 +70,7 @@ impl eframe::App for Gui {
                     ui.heading("Caster settings");
                     self.caster_settings(ui);
                 }
-                Route::PlayerRoot => {
+                Route::PlayerControls => {
                     ui.heading("Player root");
                     self.player_controls(ui, ctx); // Calling the new function here
                 }
