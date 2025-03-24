@@ -1,17 +1,18 @@
 use crate::ffmpeg;
+use crate::screen::Screen;
 use crate::settings::Settings;
 use egui::{Pos2, Rect};
 use refbox::Ref;
-use std::collections::HashMap;
+// use std::collections::HashMap;
 use std::io;
 use std::process::Child;
 
 #[derive(Default)]
 pub struct Capturer {
-    capture_devices: HashMap<String, String>, // Elenco dei dispositivi di cattura disponibili
-    selected_device: Option<String>,          // Dispositivo selezionato
-    is_recording: bool,                       // Stato della registrazione
-    ffmpeg_process: Option<Child>,            // Processo di registrazione
+    capture_devices: Vec<Screen>, // Elenco dei dispositivi di cattura disponibili
+    selected_device: Option<String>, // Dispositivo selezionato
+    is_recording: bool,           // Stato della registrazione
+    ffmpeg_process: Option<Child>, // Processo di registrazione
     settings: Option<Ref<Settings>>,
     pub selecting_area: bool, // Flag per la selezione dell'area
     pub selected_area: Option<Rect>,
@@ -27,20 +28,28 @@ impl Capturer {
         }
     }
 
-    pub fn set_capture_devices(&mut self) -> io::Result<()> {
-        self.capture_devices = ffmpeg::list_screen_capture_devices()?;
-        if self.capture_devices.is_empty() {
-            return Err(io::Error::new(
-                io::ErrorKind::NotFound,
-                "No screen capture devices found",
-            ));
-        }
-        Ok(())
+    pub fn set_capture_devices(&mut self) {
+        self.capture_devices = Screen::get_all();
     }
 
+    // pub fn set_capture_devices(&mut self) -> io::Result<()> {
+    //     self.capture_devices = ffmpeg::list_screen_capture_devices()?;
+    //     if self.capture_devices.is_empty() {
+    //         return Err(io::Error::new(
+    //             io::ErrorKind::NotFound,
+    //             "No screen capture devices found",
+    //         ));
+    //     }
+    //     Ok(())
+    // }
+
     /// entries are like: (index of device, device name)
-    pub fn get_capture_devices(&self) -> HashMap<String, String> {
-        self.capture_devices.clone()
+    // pub fn get_capture_devices(&self) -> HashMap<String, String> {
+    //     self.capture_devices.clone()
+    // }
+
+    pub fn get_capture_devices(&self) -> &Vec<Screen> {
+        &self.capture_devices
     }
 
     /// Avvia la registrazione dello schermo
@@ -95,12 +104,14 @@ impl Capturer {
 
     // Setter to set the selected device
     pub fn set_selected_device(&mut self, device: String) -> io::Result<()> {
-        // Check if the device exists in the available devices
-        if self.capture_devices.contains_key(&device) {
-            self.selected_device = Some(device); // Set the selected device
-            Ok(()) // Return Ok if the device is found
+        let device_exists = self
+            .capture_devices
+            .iter()
+            .any(|screen| screen.handle().eq(&device));
+        if device_exists {
+            self.selected_device = Some(device);
+            Ok(())
         } else {
-            // Return an error if the device is not found
             Err(io::Error::new(
                 io::ErrorKind::InvalidInput,
                 "Device index not found",
@@ -109,11 +120,6 @@ impl Capturer {
     }
     pub fn get_is_recording(&self) -> bool {
         self.is_recording
-    }
-
-    // FUNZIONE MOMENTANEA DI TEST
-    pub fn get_first_device(&self) -> Option<String> {
-        self.capture_devices.keys().next().cloned()
     }
 }
 

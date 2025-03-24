@@ -5,9 +5,7 @@ impl Gui {
         if ui.button("Caster").clicked() {
             self.route_to(Route::CasterDeviceSelection);
             // Carica i dispositivi di cattura all'ingresso
-            if let Err(e) = self.capturer.set_capture_devices() {
-                ui.label(format!("Error: {}", e));
-            }
+            self.capturer.set_capture_devices();
         }
         if ui.button("Player").clicked() {
             self.route_to(Route::PlayerControls);
