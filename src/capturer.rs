@@ -3,12 +3,10 @@ use crate::screen::Screen;
 use crate::settings::Settings;
 use egui::{Pos2, Rect};
 use refbox::Ref;
-// use std::collections::HashMap;
 use std::io::{self, Read};
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use std::process::Child;
 use std::thread::spawn;
-use std::time::Duration;
 
 #[derive(Default)]
 pub struct Capturer {
