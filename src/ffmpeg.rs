@@ -118,7 +118,7 @@ fn get_ffmpeg_args(crop: Option<ScreenCrop>, target: &str, save_dir: &Path) -> V
         "-map",
         "[out2]",
         "-f",
-        "null",
+        "rawvideo",
         "-",
     ];
 
@@ -140,6 +140,7 @@ pub fn start_screen_capture(
     let ffmpeg_command = Command::new("ffmpeg")
         .args(&ffmpeg_args)
         .stdin(Stdio::piped())
+        .stdout(Stdio::piped())
         .stderr(Stdio::null()) // Redirect stderr to null to prevent ffmpeg messages from appearing in the terminal
         .spawn()?;
 

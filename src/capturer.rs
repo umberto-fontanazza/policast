@@ -4,10 +4,11 @@ use crate::settings::Settings;
 use egui::{Pos2, Rect};
 use refbox::Ref;
 // use std::collections::HashMap;
-use std::io;
+use std::io::{self, Read};
 use std::path::{Path, PathBuf};
 use std::process::Child;
 use std::thread::spawn;
+use std::time::Duration;
 
 #[derive(Default)]
 pub struct Capturer {
@@ -146,8 +147,17 @@ impl From<egui::Rect> for ScreenCrop {
 impl ScreenCrop {}
 
 fn _start_recording(crop: Option<ScreenCrop>, device: String, save_dir: PathBuf) {
-    spawn(move || {
+    spawn(move || -> ! {
         let child = ffmpeg::start_screen_capture(crop, &device, &save_dir)
             .expect("Should start screen capture");
+
+        let mut buffer = vec![0u8; 3840 * 2160 * 4]; // TODO: this must be set dynamically
+        let mut out = child.stdout.expect("Couldn't get stdout");
+        loop {
+            match out.read_exact(&mut buffer) {
+                Ok(_) => (),
+                Err(_) => todo!(),
+            }
+        }
     });
 }
