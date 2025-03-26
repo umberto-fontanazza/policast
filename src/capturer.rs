@@ -5,7 +5,9 @@ use egui::{Pos2, Rect};
 use refbox::Ref;
 // use std::collections::HashMap;
 use std::io;
+use std::path::{Path, PathBuf};
 use std::process::Child;
+use std::thread::spawn;
 
 #[derive(Default)]
 pub struct Capturer {
@@ -66,13 +68,9 @@ impl Capturer {
             std::fs::create_dir_all(&save_dir).expect("Should create dir if missing");
         }
         if let Some(device) = &self.selected_device {
-            self.ffmpeg_process = Some(ffmpeg::start_screen_capture(
-                self.selected_area.map(|rect| ScreenCrop::from(rect)),
-                device,
-                &save_dir,
-            )?);
             self.is_recording = true;
-            println!("Recording started on device: {}", device);
+            let crop = self.selected_area.map(|rect| ScreenCrop::from(rect));
+            _start_recording(crop, device.clone(), save_dir);
             Ok(())
         } else {
             Err(io::Error::new(
@@ -146,3 +144,10 @@ impl From<egui::Rect> for ScreenCrop {
 }
 
 impl ScreenCrop {}
+
+fn _start_recording(crop: Option<ScreenCrop>, device: String, save_dir: PathBuf) {
+    spawn(move || {
+        let child = ffmpeg::start_screen_capture(crop, &device, &save_dir)
+            .expect("Should start screen capture");
+    });
+}
