@@ -74,7 +74,7 @@ fn get_ffmpeg_args(crop: Option<ScreenCrop>, target: &str, save_dir: &Path) -> V
     let segment_path = save_dir.join("output_%03d.ts");
     let playlist_path = save_dir.join("output.m3u8");
 
-    let os_args = if cfg!(target_os = "macos") {
+    let input_args = if cfg!(target_os = "macos") {
         vec![
             "-f",
             "avfoundation",
@@ -98,6 +98,10 @@ fn get_ffmpeg_args(crop: Option<ScreenCrop>, target: &str, save_dir: &Path) -> V
     let args = vec![
         if crop.is_some() { "-vf" } else { "" },
         &crop_filter,
+        "-filter_complex",
+        "[0:v]split=2[out1][out2]",
+        "-map",
+        "[out1]",
         "-c:v",
         "libx264",
         "-f",
@@ -111,9 +115,14 @@ fn get_ffmpeg_args(crop: Option<ScreenCrop>, target: &str, save_dir: &Path) -> V
         "-hls_segment_filename",
         segment_path.to_str().expect("Couldn't stringify path"),
         playlist_path.to_str().expect("Couldn't stringify path"),
+        "-map",
+        "[out2]",
+        "-f",
+        "null",
+        "-",
     ];
 
-    os_args
+    input_args
         .into_iter()
         .chain(args.into_iter())
         .filter(|arg| !arg.is_empty())
