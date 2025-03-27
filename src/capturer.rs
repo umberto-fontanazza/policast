@@ -73,6 +73,7 @@ impl Capturer {
         if self.helper_handle.is_none() {
             return;
         }
+        self.is_recording = false;
         let (_, _, stopper) = self.helper_handle.as_ref().unwrap();
         let _ = stopper.send(() as StopSignal); //TODO: handle error
     }
