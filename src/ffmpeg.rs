@@ -67,7 +67,10 @@ pub fn list_screen_capture_devices() -> io::Result<HashMap<String, String>> {
 
 fn get_ffmpeg_args(crop: Option<ScreenCrop>, target: &str, save_dir: &Path) -> Vec<String> {
     let crop_filter = match crop {
-        Some(ref crop) => format!("crop={}:{}:{}:{}", crop.width, crop.height, crop.x, crop.y),
+        Some(ref crop) => format!(
+            "crop={}:{}:{}:{}[cropped];[cropped]",
+            crop.width, crop.height, crop.x, crop.y
+        ),
         None => "".to_string(),
     };
     // let video_size = format!("{}x{}", crop.width, crop.height);
@@ -95,11 +98,10 @@ fn get_ffmpeg_args(crop: Option<ScreenCrop>, target: &str, save_dir: &Path) -> V
     } else {
         panic!("Unsupported operating system");
     };
+    let complex_filter = format!("[0:v]{}split=2[out1][out2]", crop_filter);
     let args = vec![
-        if crop.is_some() { "-vf" } else { "" },
-        &crop_filter,
         "-filter_complex",
-        "[0:v]split=2[out1][out2]",
+        &complex_filter,
         "-map",
         "[out1]",
         "-c:v",
@@ -117,6 +119,8 @@ fn get_ffmpeg_args(crop: Option<ScreenCrop>, target: &str, save_dir: &Path) -> V
         playlist_path.to_str().expect("Couldn't stringify path"),
         "-map",
         "[out2]",
+        "-pix_fmt",
+        "rgba",
         "-f",
         "rawvideo",
         "-",
@@ -141,7 +145,7 @@ pub fn start_screen_capture(
         .args(&ffmpeg_args)
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
-        .stderr(Stdio::null()) // Redirect stderr to null to prevent ffmpeg messages from appearing in the terminal
+        // .stderr(Stdio::null()) // Redirect stderr to null to prevent ffmpeg messages from appearing in the terminal
         .spawn()?;
 
     println!("Screen capture started successfully.");
@@ -179,8 +183,8 @@ pub fn take_screenshot(source: &str) -> ColorImage {
                 source,
                 "-frames:v",
                 "1",
-                "-vf",
-                &format!("scale=iw/{downsample_factor}:ih/{downsample_factor}"),
+                // "-vf",
+                // &format!("scale=iw/{downsample_factor}:ih/{downsample_factor}"),
                 "-pix_fmt",
                 "rgba",
                 "-f",
