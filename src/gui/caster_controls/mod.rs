@@ -15,7 +15,6 @@ impl Gui {
         if ui.button("Go to settings").clicked() {
             self.route_to(Route::CasterSettings);
         }
-        ui.label("Available screen capture devices:");
 
         self.recording_controls(ui, ctx);
 
