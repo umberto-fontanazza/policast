@@ -1,13 +1,13 @@
-use crate::alias::Frame;
+use crate::alias::{Frame, StopSignal};
 use crate::screen::Screen;
 use crate::settings::Settings;
 use crate::{ffmpeg, util};
-use egui::{Context, Pos2, Rect, TextureHandle, Ui};
+use egui::{Context, Image, Pos2, Rect, TextureHandle, Ui, Vec2};
 use image::ImageBuffer;
 use refbox::Ref;
 use std::io::{self, Read};
 use std::path::PathBuf;
-use std::sync::mpsc::{channel, Receiver};
+use std::sync::mpsc::{channel, Receiver, Sender};
 use std::thread::{spawn, JoinHandle};
 
 #[derive(Default)]
@@ -15,7 +15,7 @@ pub struct Capturer {
     capture_devices: Vec<Screen>, // Elenco dei dispositivi di cattura disponibili
     selected_device: Option<String>, // Dispositivo selezionato
     is_recording: bool,           // Stato della registrazione
-    helper_handle: Option<(JoinHandle<()>, Receiver<Frame>)>,
+    helper_handle: Option<(JoinHandle<()>, Receiver<Frame>, Sender<StopSignal>)>,
     settings: Option<Ref<Settings>>,
     pub selecting_area: bool, // Flag per la selezione dell'area
     pub selected_area: Option<Rect>,
@@ -70,8 +70,12 @@ impl Capturer {
         }
     }
 
-    pub fn stop_recording(&mut self) -> io::Result<()> {
-        todo!()
+    pub fn stop_recording(&mut self) {
+        if self.helper_handle.is_none() {
+            return;
+        }
+        let (_, _, stopper) = self.helper_handle.as_ref().unwrap();
+        stopper.send(() as StopSignal);
     }
 
     // Getter to retrieve the selected device
@@ -102,10 +106,15 @@ impl Capturer {
     pub fn render(&mut self, ui: &mut Ui, ctx: &Context, texture: &mut TextureHandle) {
         match self.is_recording {
             true => {
-                let (_, frame_receiver) = self.helper_handle.as_ref().unwrap();
+                let (_, frame_receiver, __) = self.helper_handle.as_ref().unwrap();
                 let frame = frame_receiver.recv().unwrap();
                 util::update_texture(texture, frame);
-                ui.image(&(*texture));
+                ui.add(
+                    Image::new(&(*texture))
+                        .maintain_aspect_ratio(true)
+                        .fit_to_fraction(Vec2::new(1.0, 2.0)),
+                );
+                // ui.image(Image::new(&(*texture)));
                 ctx.request_repaint();
             }
             false => {
@@ -143,8 +152,9 @@ fn _start_recording(
     crop: Option<ScreenCrop>,
     device: Screen,
     save_dir: PathBuf,
-) -> (JoinHandle<()>, Receiver<Frame>) {
+) -> (JoinHandle<()>, Receiver<Frame>, Sender<StopSignal>) {
     let mut device = device;
+    let (sender, receiver) = channel::<StopSignal>();
     let (frame_sender, frame_receiver) = channel::<Frame>();
     let (width, height) = (device.width(), device.height());
     let handle = spawn(move || {
@@ -154,18 +164,18 @@ fn _start_recording(
         let mut buffer = vec![0u8; width * height * 4];
         let mut out = child.stdout.expect("Couldn't get stdout");
         while out.read_exact(&mut buffer).is_ok() {
-            // match receiver.try_recv() {
-            //     Ok(_) => {
-            //         break; // received signal to stop
-            //     }
-            //     Err(e) => match e {
-            //         std::sync::mpsc::TryRecvError::Empty => {}
-            //         std::sync::mpsc::TryRecvError::Disconnected => {
-            //             println!("This shouldn't happen");
-            //             break;
-            //         }
-            //     },
-            // }
+            match receiver.try_recv() {
+                Ok(_) => {
+                    break; // received signal to stop
+                }
+                Err(e) => match e {
+                    std::sync::mpsc::TryRecvError::Empty => {}
+                    std::sync::mpsc::TryRecvError::Disconnected => {
+                        println!("This shouldn't happen");
+                        break;
+                    }
+                },
+            }
             let frame: Frame = ImageBuffer::from_raw(
                 u32::try_from(width).unwrap(),
                 u32::try_from(height).unwrap(),
@@ -177,5 +187,5 @@ fn _start_recording(
                 .expect("Couldn't send frame over channel");
         }
     });
-    (handle, frame_receiver)
+    (handle, frame_receiver, sender)
 }

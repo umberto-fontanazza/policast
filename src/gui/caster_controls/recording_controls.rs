@@ -14,9 +14,7 @@ impl Gui {
             }
         } else {
             if ui.button("Stop Recording").clicked() {
-                if let Err(e) = self.capturer.stop_recording() {
-                    ui.label(format!("Error: {}", e)); // Show error if stopping recording fails
-                }
+                self.capturer.stop_recording();
             }
         }
         self.capturer
