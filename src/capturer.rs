@@ -3,7 +3,6 @@ use crate::screen::Screen;
 use crate::settings::Settings;
 use crate::{ffmpeg, util};
 use egui::{Context, Image, Pos2, Rect, TextureHandle, Ui, Vec2};
-use image::ImageBuffer;
 use refbox::Ref;
 use std::io::{self, Read};
 use std::path::PathBuf;
@@ -12,9 +11,9 @@ use std::thread::{spawn, JoinHandle};
 
 #[derive(Default)]
 pub struct Capturer {
-    capture_devices: Vec<Screen>, // Elenco dei dispositivi di cattura disponibili
-    selected_device: Option<String>, // Dispositivo selezionato
-    is_recording: bool,           // Stato della registrazione
+    capture_devices: Vec<Screen>,
+    selected_device: Option<String>,
+    is_recording: bool,
     helper_handle: Option<(JoinHandle<()>, Receiver<Frame>, Sender<StopSignal>)>,
     settings: Option<Ref<Settings>>,
     pub selecting_area: bool, // Flag per la selezione dell'area
@@ -75,15 +74,13 @@ impl Capturer {
             return;
         }
         let (_, _, stopper) = self.helper_handle.as_ref().unwrap();
-        stopper.send(() as StopSignal);
+        let _ = stopper.send(() as StopSignal); //TODO: handle error
     }
 
-    // Getter to retrieve the selected device
     pub fn get_selected_device(&self) -> Option<String> {
-        self.selected_device.clone() // Clone and return the selected device (if any)
+        self.selected_device.clone()
     }
 
-    // Setter to set the selected device
     pub fn set_selected_device(&mut self, device: String) -> io::Result<()> {
         let device_exists = self
             .capture_devices
@@ -99,7 +96,8 @@ impl Capturer {
             ))
         }
     }
-    pub fn get_is_recording(&self) -> bool {
+
+    pub fn is_recording(&self) -> bool {
         self.is_recording
     }
 
@@ -114,7 +112,6 @@ impl Capturer {
                         .maintain_aspect_ratio(true)
                         .fit_to_fraction(Vec2::new(1.0, 2.0)),
                 );
-                // ui.image(Image::new(&(*texture)));
                 ctx.request_repaint();
             }
             false => {
@@ -154,9 +151,9 @@ fn _start_recording(
     save_dir: PathBuf,
 ) -> (JoinHandle<()>, Receiver<Frame>, Sender<StopSignal>) {
     let mut device = device;
+    let (width, height) = (device.width(), device.height());
     let (sender, receiver) = channel::<StopSignal>();
     let (frame_sender, frame_receiver) = channel::<Frame>();
-    let (width, height) = (device.width(), device.height());
     let handle = spawn(move || {
         let child = ffmpeg::start_screen_capture(crop, &device.handle(), &save_dir)
             .expect("Should start screen capture");
@@ -176,12 +173,7 @@ fn _start_recording(
                     }
                 },
             }
-            let frame: Frame = ImageBuffer::from_raw(
-                u32::try_from(width).unwrap(),
-                u32::try_from(height).unwrap(),
-                buffer.clone(),
-            )
-            .expect("Couldn't create image buffer");
+            let frame: Frame = util::frame_from_buffer(width, height, buffer.clone());
             frame_sender
                 .send(frame)
                 .expect("Couldn't send frame over channel");

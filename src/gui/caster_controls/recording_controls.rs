@@ -7,7 +7,7 @@ impl Gui {
             self.preview_texture =
                 Some(ctx.load_texture("preview", ColorImage::default(), Default::default()))
         }
-        if !self.capturer.get_is_recording() {
+        if !self.capturer.is_recording() {
             if ui.button("Start Recording").clicked() {
                 //TODO: error management
                 self.capturer.start_recording();

@@ -1,4 +1,4 @@
-use image::ImageBuffer;
+use crate::util;
 
 use crate::{
     alias::{Frame, StopSignal},
@@ -47,12 +47,7 @@ impl Decoder {
                         }
                     },
                 }
-                let frame: Frame = ImageBuffer::from_raw(
-                    u32::try_from(WIDTH).unwrap(),
-                    u32::try_from(HEIGHT).unwrap(),
-                    buffer.clone(),
-                )
-                .expect("Couldn't create image buffer");
+                let frame: Frame = util::frame_from_buffer(WIDTH, HEIGHT, buffer.clone());
                 frame_sender
                     .send(frame)
                     .expect("Couldn't send frame over channel");
