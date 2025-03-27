@@ -1,3 +1,4 @@
+pub mod alias;
 pub mod capturer;
 pub mod decoder;
 pub mod ffmpeg;

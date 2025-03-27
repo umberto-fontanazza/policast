@@ -1,14 +1,15 @@
 use image::ImageBuffer;
 
-use crate::playback::{Frame, FPS, HEIGHT, WIDTH};
+use crate::{
+    alias::{Frame, StopSignal},
+    playback::{FPS, HEIGHT, WIDTH},
+};
 use std::{
     io::Read,
     process::{Command, Stdio},
     sync::mpsc::{channel, Receiver, RecvError, Sender},
     thread::{self, JoinHandle},
 };
-
-type StopSignal = ();
 
 pub struct Decoder {
     sender: Sender<StopSignal>,

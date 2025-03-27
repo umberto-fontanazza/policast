@@ -1,16 +1,13 @@
 use std::time::{Duration, Instant};
 
-use crate::{decoder::Decoder, util};
+use crate::{alias::Frame, decoder::Decoder, util};
 use eframe::egui;
 use egui::{ColorImage, TextureHandle, Ui};
-use image::{ImageBuffer, Rgba};
 use replace_with::replace_with_or_abort;
 
 pub const WIDTH: usize = 1280;
 pub const HEIGHT: usize = 720;
 pub const FPS: usize = 30;
-
-pub type Frame = ImageBuffer<Rgba<u8>, Vec<u8>>;
 
 #[derive(PartialEq)]
 pub enum PlaybackStatus {

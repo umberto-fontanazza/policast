@@ -1,4 +1,4 @@
-use crate::playback::Frame;
+use crate::alias::Frame;
 use crate::screen::Screen;
 use crate::settings::Settings;
 use crate::{ffmpeg, util};
