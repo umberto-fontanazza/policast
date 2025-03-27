@@ -7,6 +7,7 @@ pub mod playback;
 pub mod screen;
 pub mod server;
 pub mod settings;
+pub mod util;
 
 #[cfg(test)]
 mod tests {

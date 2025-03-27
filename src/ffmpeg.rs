@@ -145,7 +145,7 @@ pub fn start_screen_capture(
         .args(&ffmpeg_args)
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
-        // .stderr(Stdio::null()) // Redirect stderr to null to prevent ffmpeg messages from appearing in the terminal
+        .stderr(Stdio::null()) // Redirect stderr to null to prevent ffmpeg messages from appearing in the terminal
         .spawn()?;
 
     println!("Screen capture started successfully.");

@@ -1,6 +1,6 @@
 use std::time::{Duration, Instant};
 
-use crate::decoder::Decoder;
+use crate::{decoder::Decoder, util};
 use eframe::egui;
 use egui::{ColorImage, TextureHandle, Ui};
 use image::{ImageBuffer, Rgba};
@@ -128,11 +128,7 @@ impl Playback {
         if let Status::Playing(decoder) = &mut self.status {
             let frame: Frame = decoder.recv().expect("Failed to receive frame");
             let texture = self.texture.as_mut().expect("Missing texture handle");
-            let image = ColorImage::from_rgba_unmultiplied(
-                [frame.width() as usize, frame.height() as usize],
-                frame.as_raw(),
-            );
-            texture.set(image, Default::default());
+            util::update_texture(texture, frame);
             ui.image(&(*texture));
             ctx.request_repaint();
         }

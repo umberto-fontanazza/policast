@@ -1,19 +1,21 @@
-use crate::ffmpeg;
+use crate::playback::Frame;
 use crate::screen::Screen;
 use crate::settings::Settings;
-use egui::{Pos2, Rect};
+use crate::{ffmpeg, util};
+use egui::{Context, Pos2, Rect, TextureHandle, Ui};
+use image::ImageBuffer;
 use refbox::Ref;
 use std::io::{self, Read};
 use std::path::PathBuf;
-use std::process::Child;
-use std::thread::spawn;
+use std::sync::mpsc::{channel, Receiver};
+use std::thread::{spawn, JoinHandle};
 
 #[derive(Default)]
 pub struct Capturer {
     capture_devices: Vec<Screen>, // Elenco dei dispositivi di cattura disponibili
     selected_device: Option<String>, // Dispositivo selezionato
     is_recording: bool,           // Stato della registrazione
-    ffmpeg_process: Option<Child>, // Processo di registrazione
+    helper_handle: Option<(JoinHandle<()>, Receiver<Frame>)>,
     settings: Option<Ref<Settings>>,
     pub selecting_area: bool, // Flag per la selezione dell'area
     pub selected_area: Option<Rect>,
@@ -33,27 +35,10 @@ impl Capturer {
         self.capture_devices = Screen::get_all();
     }
 
-    // pub fn set_capture_devices(&mut self) -> io::Result<()> {
-    //     self.capture_devices = ffmpeg::list_screen_capture_devices()?;
-    //     if self.capture_devices.is_empty() {
-    //         return Err(io::Error::new(
-    //             io::ErrorKind::NotFound,
-    //             "No screen capture devices found",
-    //         ));
-    //     }
-    //     Ok(())
-    // }
-
-    /// entries are like: (index of device, device name)
-    // pub fn get_capture_devices(&self) -> HashMap<String, String> {
-    //     self.capture_devices.clone()
-    // }
-
     pub fn get_capture_devices(&self) -> &Vec<Screen> {
         &self.capture_devices
     }
 
-    /// Avvia la registrazione dello schermo
     pub fn start_recording(&mut self) -> io::Result<()> {
         let save_dir = {
             self.settings
@@ -67,9 +52,15 @@ impl Capturer {
             std::fs::create_dir_all(&save_dir).expect("Should create dir if missing");
         }
         if let Some(device) = &self.selected_device {
+            let device = self
+                .capture_devices
+                .iter()
+                .find(|screen| screen.handle().eq(device))
+                .expect("Selected device hanlde is inconsistent with available devices");
             self.is_recording = true;
             let crop = self.selected_area.map(|rect| ScreenCrop::from(rect));
-            _start_recording(crop, device.clone(), save_dir);
+            let handle = _start_recording(crop, device.clone(), save_dir);
+            self.helper_handle = Some(handle);
             Ok(())
         } else {
             Err(io::Error::new(
@@ -79,19 +70,8 @@ impl Capturer {
         }
     }
 
-    /// Interrompe la registrazione dello schermo
     pub fn stop_recording(&mut self) -> io::Result<()> {
-        if let Some(process) = self.ffmpeg_process.take() {
-            ffmpeg::stop_screen_capture(process)?;
-            self.is_recording = false;
-            println!("Recording stopped.");
-            Ok(())
-        } else {
-            Err(io::Error::new(
-                io::ErrorKind::NotFound,
-                "No active recording to stop",
-            ))
-        }
+        todo!()
     }
 
     // Getter to retrieve the selected device
@@ -117,6 +97,21 @@ impl Capturer {
     }
     pub fn get_is_recording(&self) -> bool {
         self.is_recording
+    }
+
+    pub fn render(&mut self, ui: &mut Ui, ctx: &Context, texture: &mut TextureHandle) {
+        match self.is_recording {
+            true => {
+                let (_, frame_receiver) = self.helper_handle.as_ref().unwrap();
+                let frame = frame_receiver.recv().unwrap();
+                util::update_texture(texture, frame);
+                ui.image(&(*texture));
+                ctx.request_repaint();
+            }
+            false => {
+                ui.label("Capturer not recoding");
+            }
+        }
     }
 }
 
@@ -144,18 +139,43 @@ impl From<egui::Rect> for ScreenCrop {
 
 impl ScreenCrop {}
 
-fn _start_recording(crop: Option<ScreenCrop>, device: String, save_dir: PathBuf) {
-    spawn(move || -> ! {
-        let child = ffmpeg::start_screen_capture(crop, &device, &save_dir)
+fn _start_recording(
+    crop: Option<ScreenCrop>,
+    device: Screen,
+    save_dir: PathBuf,
+) -> (JoinHandle<()>, Receiver<Frame>) {
+    let mut device = device;
+    let (frame_sender, frame_receiver) = channel::<Frame>();
+    let (width, height) = (device.width(), device.height());
+    let handle = spawn(move || {
+        let child = ffmpeg::start_screen_capture(crop, &device.handle(), &save_dir)
             .expect("Should start screen capture");
 
-        let mut buffer = vec![0u8; 3840 * 2160 * 4]; // TODO: this must be set dynamically
+        let mut buffer = vec![0u8; width * height * 4];
         let mut out = child.stdout.expect("Couldn't get stdout");
-        loop {
-            match out.read_exact(&mut buffer) {
-                Ok(_) => (),
-                Err(_) => todo!(),
-            }
+        while out.read_exact(&mut buffer).is_ok() {
+            // match receiver.try_recv() {
+            //     Ok(_) => {
+            //         break; // received signal to stop
+            //     }
+            //     Err(e) => match e {
+            //         std::sync::mpsc::TryRecvError::Empty => {}
+            //         std::sync::mpsc::TryRecvError::Disconnected => {
+            //             println!("This shouldn't happen");
+            //             break;
+            //         }
+            //     },
+            // }
+            let frame: Frame = ImageBuffer::from_raw(
+                u32::try_from(width).unwrap(),
+                u32::try_from(height).unwrap(),
+                buffer.clone(),
+            )
+            .expect("Couldn't create image buffer");
+            frame_sender
+                .send(frame)
+                .expect("Couldn't send frame over channel");
         }
     });
+    (handle, frame_receiver)
 }

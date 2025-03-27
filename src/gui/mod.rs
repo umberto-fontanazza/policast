@@ -23,6 +23,7 @@ enum Route {
 pub struct Gui {
     settings: Ref<Settings>,
     thumbnail_textures: Option<Vec<TextureHandle>>, //used to preview the capture devices
+    preview_texture: Option<TextureHandle>,
     _route: Route, // don't set this, use self.route_to() instead. This is used to reuse calculations between renders.
     first_route_render: bool, // to avoid repeated calculation for each render
     video_link: String,
@@ -38,6 +39,7 @@ impl Gui {
         Self {
             settings: s.create_ref(),
             thumbnail_textures: None,
+            preview_texture: None,
             capturer: Capturer::new(s.create_ref()),
             _route: Route::default(),
             first_route_render: true,
@@ -69,7 +71,7 @@ impl eframe::App for Gui {
                 }
                 Route::CasterControls => {
                     ui.heading("Caster root");
-                    self.caster_controls(ui);
+                    self.caster_controls(ui, ctx);
                 }
                 Route::CasterSettings => {
                     ui.heading("Caster settings");

@@ -1,7 +1,7 @@
 use super::Gui;
 use crate::ffmpeg::take_screenshot;
 use crate::gui::Route;
-use egui::TextureHandle;
+use egui::{Image, TextureHandle, Vec2};
 
 impl Gui {
     pub fn device_selector(&mut self, ui: &mut egui::Ui, ctx: &egui::Context) {
@@ -33,7 +33,11 @@ impl Gui {
                 let selected = selected_device
                     .as_ref()
                     .is_some_and(|d1| d1.eq(&device.handle()));
-                let img_button = egui::ImageButton::new(t).selected(selected);
+                //TODO: fit to relative size?
+                let img_button = egui::ImageButton::new(
+                    Image::new(t).fit_to_exact_size(Vec2::new(320.0, 180.0)),
+                )
+                .selected(selected);
                 let button = egui::Button::new(device.name()).selected(selected);
 
                 ui.vertical(|ui| {
