@@ -1,3 +1,5 @@
+use crate::gui::Route;
+
 use super::Gui;
 use egui::{ColorImage, Context};
 
@@ -6,6 +8,12 @@ impl Gui {
         if self.first_route_render {
             self.preview_texture =
                 Some(ctx.load_texture("preview", ColorImage::default(), Default::default()))
+        }
+        if ui.button("Back to device selection").clicked() {
+            self.capturer
+                .set_selected_device(None)
+                .expect("Couldn't clear device selection");
+            self.route_to(Route::CasterDeviceSelection);
         }
         if !self.capturer.is_recording() {
             if ui.button("Start Recording").clicked() {

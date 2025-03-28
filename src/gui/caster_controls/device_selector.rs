@@ -13,7 +13,7 @@ impl Gui {
                 .iter()
                 .map(|device| {
                     ctx.load_texture(
-                        format!("thumb-device-{}", device.name()),
+                        format!("device-{}", device.handle()),
                         take_screenshot(&device.handle()),
                         Default::default(),
                     )
@@ -24,12 +24,13 @@ impl Gui {
 
         ui.horizontal(|ui| {
             devices.iter().for_each(|device| {
-                let parsed_index = device
-                    .handle()
-                    .parse::<usize>()
-                    .expect("Should parse an usize")
-                    - 1; // -1 to get it 0 based
-                let t = &(self.thumbnail_textures.as_ref().unwrap()[parsed_index]);
+                let t = self
+                    .thumbnail_textures
+                    .as_ref()
+                    .unwrap()
+                    .iter()
+                    .find(|t| t.name().eq(format!("device-{}", device.handle()).as_str()))
+                    .expect(format!("Texture with hanlde {} not found", device.handle()).as_str());
                 let selected = selected_device
                     .as_ref()
                     .is_some_and(|d1| d1.eq(&device.handle()));
@@ -43,7 +44,7 @@ impl Gui {
                 ui.vertical(|ui| {
                     if ui.add(img_button).clicked() || ui.add(button).clicked() {
                         self.capturer
-                            .set_selected_device(device.handle().to_string())
+                            .set_selected_device(Some(device.handle().to_string()))
                             .expect("Couldn't set the selected device");
                         self.route_to(Route::CasterControls);
                     }

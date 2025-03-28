@@ -82,13 +82,17 @@ impl Capturer {
         self.selected_device.clone()
     }
 
-    pub fn set_selected_device(&mut self, device: String) -> io::Result<()> {
+    pub fn set_selected_device(&mut self, device: Option<String>) -> io::Result<()> {
+        if device.is_none() {
+            self.selected_device = device;
+            return Ok(());
+        }
         let device_exists = self
             .capture_devices
             .iter()
-            .any(|screen| screen.handle().eq(&device));
+            .any(|screen| screen.handle().eq(device.as_ref().unwrap()));
         if device_exists {
-            self.selected_device = Some(device);
+            self.selected_device = device;
             Ok(())
         } else {
             Err(io::Error::new(
