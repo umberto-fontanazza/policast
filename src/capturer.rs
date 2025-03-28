@@ -160,29 +160,32 @@ fn _start_recording(
     let (sender, receiver) = channel::<StopSignal>();
     let (frame_sender, frame_receiver) = channel::<Frame>();
     let handle = spawn(move || {
-        let child = ffmpeg::start_screen_capture(crop, &device.handle(), &save_dir)
+        let mut subprocess = ffmpeg::start_screen_capture(crop, &device.handle(), &save_dir)
             .expect("Should start screen capture");
 
         let mut buffer = vec![0u8; width * height * 4];
-        let mut out = child.stdout.expect("Couldn't get stdout");
-        while out.read_exact(&mut buffer).is_ok() {
-            match receiver.try_recv() {
-                Ok(_) => {
-                    break; // received signal to stop
-                }
-                Err(e) => match e {
-                    std::sync::mpsc::TryRecvError::Empty => {}
-                    std::sync::mpsc::TryRecvError::Disconnected => {
-                        println!("This shouldn't happen");
-                        break;
+        {
+            let out = subprocess.stdout.as_mut().expect("Couldn't get stdout");
+            while out.read_exact(&mut buffer).is_ok() {
+                match receiver.try_recv() {
+                    Ok(_) => {
+                        break; // received signal to stop
                     }
-                },
+                    Err(e) => match e {
+                        std::sync::mpsc::TryRecvError::Empty => {}
+                        std::sync::mpsc::TryRecvError::Disconnected => {
+                            println!("This shouldn't happen");
+                            break;
+                        }
+                    },
+                }
+                let frame: Frame = util::frame_from_buffer(width, height, buffer.clone());
+                frame_sender
+                    .send(frame)
+                    .expect("Couldn't send frame over channel");
             }
-            let frame: Frame = util::frame_from_buffer(width, height, buffer.clone());
-            frame_sender
-                .send(frame)
-                .expect("Couldn't send frame over channel");
         }
+        ffmpeg::stop_screen_capture(subprocess).unwrap();
     });
     (handle, frame_receiver, sender)
 }
