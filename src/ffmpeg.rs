@@ -67,10 +67,7 @@ pub fn list_screen_capture_devices() -> io::Result<HashMap<String, String>> {
 
 fn get_ffmpeg_args(crop: Option<ScreenCrop>, target: &str, save_dir: &Path) -> Vec<String> {
     let crop_filter = match crop {
-        Some(ref crop) => format!(
-            "crop={}:{}:{}:{}[cropped];[cropped]",
-            crop.width, crop.height, crop.x, crop.y
-        ),
+        Some(ref crop) => format!("crop={}:{}:{}:{},", crop.width, crop.height, crop.x, crop.y),
         None => "".to_string(),
     };
     // let video_size = format!("{}x{}", crop.width, crop.height);
