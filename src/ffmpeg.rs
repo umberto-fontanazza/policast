@@ -1,4 +1,4 @@
-use crate::capturer::ScreenCrop;
+use crate::crop::ScreenCrop;
 use egui::ColorImage;
 use image::{load_from_memory_with_format, RgbImage};
 use regex::Regex;

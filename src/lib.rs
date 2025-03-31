@@ -1,5 +1,6 @@
 pub mod alias;
 pub mod capturer;
+pub mod crop;
 pub mod decoder;
 pub mod ffmpeg;
 pub mod gui;
