@@ -133,7 +133,10 @@ fn _start_recording(
     save_dir: PathBuf,
 ) -> (JoinHandle<()>, Receiver<Frame>, Sender<StopSignal>) {
     let mut device = device;
-    let (width, height) = (device.width(), device.height());
+    let (width, height) = match crop {
+        Some(ref crop) => (crop.width, crop.height),
+        None => (device.width(), device.height()),
+    };
     let (sender, receiver) = channel::<StopSignal>();
     let (frame_sender, frame_receiver) = channel::<Frame>();
     let handle = spawn(move || {
