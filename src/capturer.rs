@@ -116,7 +116,7 @@ impl Capturer {
                 ui.add(
                     Image::new(&(*texture))
                         .maintain_aspect_ratio(true)
-                        .fit_to_fraction(Vec2::new(1.0, 2.0)),
+                        .fit_to_fraction(Vec2::new(1.0, 1.0)),
                 );
                 ctx.request_repaint();
             }
