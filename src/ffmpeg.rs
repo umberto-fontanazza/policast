@@ -1,4 +1,5 @@
 use crate::crop::ScreenCrop;
+use crate::settings::CAPTURE_FPS;
 use egui::ColorImage;
 use image::{load_from_memory_with_format, RgbImage};
 use regex::Regex;
@@ -71,6 +72,7 @@ fn get_ffmpeg_args(
     target: &str,
     save_dir: &Path,
 ) -> Vec<String> {
+    let framerate = CAPTURE_FPS.to_string();
     let size_filter = match resolution {
         Some(height) => format!("scale=trunc(oh*a/2)*2:{},", height),
         None => "".to_string(),
@@ -88,17 +90,17 @@ fn get_ffmpeg_args(
             "-f",
             "avfoundation",
             "-r",
-            "25",
+            &framerate,
             "-i",
             target,
             // "-video_size",
             // &video_size,
         ]
     } else if cfg!(target_os = "windows") {
-        vec!["-f", "gdigrab", "-framerate", "30", "-i", target]
+        vec!["-f", "gdigrab", "-framerate", &framerate, "-i", target]
     } else if cfg!(target_os = "linux") {
         vec![
-            "-f", "x11grab", "-r", "30", // "-s", &video_size,
+            "-f", "x11grab", "-r", &framerate, // "-s", &video_size,
             "-i", target,
         ]
     } else {
