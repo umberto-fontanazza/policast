@@ -1,8 +1,8 @@
+use crate::settings::CAPTURE_FPS;
 use crate::util;
-
 use crate::{
     alias::{Frame, StopSignal},
-    playback::{FPS, HEIGHT, WIDTH},
+    playback::{HEIGHT, WIDTH},
 };
 use std::{
     io::Read,
@@ -87,9 +87,9 @@ pub fn get_ffmpeg_decoder_args(video_link: &str) -> Vec<String> {
         "-i".to_owned(),
         video_link.to_owned(), // Input the video link
         "-r".to_owned(),
-        format!("{FPS}"),
+        format!("{CAPTURE_FPS}"),
         "-vf".to_owned(),
-        format!("fps={FPS},scale={WIDTH}:{HEIGHT},format=rgba"), // Set resolution and format
+        format!("fps={CAPTURE_FPS},scale={WIDTH}:{HEIGHT},format=rgba"), // Set resolution and format
         "-pix_fmt".to_owned(),
         "rgba".to_owned(), // Set pixel format
         "-f".to_owned(),

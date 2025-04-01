@@ -66,7 +66,7 @@ pub fn list_screen_capture_devices() -> io::Result<HashMap<String, String>> {
 }
 
 fn get_ffmpeg_args(
-    resolution: Option<(usize)>,
+    resolution: Option<usize>,
     crop: Option<ScreenCrop>,
     target: &str,
     save_dir: &Path,

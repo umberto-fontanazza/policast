@@ -1,6 +1,6 @@
-use std::time::{Duration, Instant};
+use std::time::Instant;
 
-use crate::{alias::Frame, decoder::Decoder, util};
+use crate::{alias::Frame, decoder::Decoder, settings::CAPTURE_PERIOD, util};
 use eframe::egui;
 use egui::{ColorImage, TextureHandle, Ui};
 use replace_with::replace_with_or_abort;
@@ -100,9 +100,8 @@ impl Playback {
                 let now = Instant::now();
                 match self.refresh_timestamp {
                     Some(t) => {
-                        let frame_period = Duration::from_millis(40); // (1000 ms / (FPS = 25)) = 40
-                        if now.duration_since(t) > frame_period {
-                            self.refresh_timestamp = Some(t + frame_period);
+                        if now.duration_since(t) > CAPTURE_PERIOD {
+                            self.refresh_timestamp = Some(t + CAPTURE_PERIOD);
                             self.next_frame(ui, ctx);
                         } else {
                             ui.image(self.texture.as_ref().unwrap());
