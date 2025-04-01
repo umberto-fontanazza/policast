@@ -1,6 +1,8 @@
 use std::env;
 use std::path::PathBuf;
 
+pub const CAPTURE_HEIGHT: usize = 1080;
+
 pub struct Settings {
     save_dir: PathBuf,
 }

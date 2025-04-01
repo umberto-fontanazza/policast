@@ -1,7 +1,7 @@
 use crate::alias::{Frame, StopSignal};
 use crate::crop::ScreenCrop;
 use crate::screen::Screen;
-use crate::settings::Settings;
+use crate::settings::{Settings, CAPTURE_HEIGHT};
 use crate::{ffmpeg, util};
 use egui::{Context, Image, Pos2, Rect, TextureHandle, Ui, Vec2};
 use refbox::Ref;
@@ -135,13 +135,18 @@ fn _start_recording(
     let mut device = device;
     let (width, height) = match crop {
         Some(ref crop) => (crop.width, crop.height),
-        None => (device.width(), device.height()),
+        None => {
+            let height = CAPTURE_HEIGHT;
+            let width = device.width() * height / device.height();
+            (width, height)
+        }
     };
     let (sender, receiver) = channel::<StopSignal>();
     let (frame_sender, frame_receiver) = channel::<Frame>();
     let handle = spawn(move || {
-        let mut subprocess = ffmpeg::start_screen_capture(crop, &device.handle(), &save_dir)
-            .expect("Should start screen capture");
+        let mut subprocess =
+            ffmpeg::start_screen_capture(Some(CAPTURE_HEIGHT), crop, &device.handle(), &save_dir)
+                .expect("Should start screen capture");
 
         let mut buffer = vec![0u8; width * height * 4];
         {

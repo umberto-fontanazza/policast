@@ -65,7 +65,16 @@ pub fn list_screen_capture_devices() -> io::Result<HashMap<String, String>> {
     }
 }
 
-fn get_ffmpeg_args(crop: Option<ScreenCrop>, target: &str, save_dir: &Path) -> Vec<String> {
+fn get_ffmpeg_args(
+    resolution: Option<(usize)>,
+    crop: Option<ScreenCrop>,
+    target: &str,
+    save_dir: &Path,
+) -> Vec<String> {
+    let size_filter = match resolution {
+        Some(height) => format!("scale=trunc(oh*a/2)*2:{},", height),
+        None => "".to_string(),
+    };
     let crop_filter = match crop {
         Some(ref crop) => format!("crop={}:{}:{}:{},", crop.width, crop.height, crop.x, crop.y),
         None => "".to_string(),
@@ -95,7 +104,7 @@ fn get_ffmpeg_args(crop: Option<ScreenCrop>, target: &str, save_dir: &Path) -> V
     } else {
         panic!("Unsupported operating system");
     };
-    let complex_filter = format!("[0:v]{}split=2[out1][out2]", crop_filter);
+    let complex_filter = format!("[0:v]{}{}split=2[out1][out2]", size_filter, crop_filter);
     let args = vec![
         "-filter_complex",
         &complex_filter,
@@ -132,17 +141,18 @@ fn get_ffmpeg_args(crop: Option<ScreenCrop>, target: &str, save_dir: &Path) -> V
 }
 
 pub fn start_screen_capture(
+    resolution: Option<usize>,
     crop: Option<ScreenCrop>,
     target: &str,
     save_dir: &Path,
 ) -> io::Result<Child> {
-    let ffmpeg_args = get_ffmpeg_args(crop, target, save_dir);
+    let ffmpeg_args = get_ffmpeg_args(resolution, crop, target, save_dir);
 
     let ffmpeg_command = Command::new("ffmpeg")
         .args(&ffmpeg_args)
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
-        .stderr(Stdio::null()) // Redirect stderr to null to prevent ffmpeg messages from appearing in the terminal
+        // .stderr(Stdio::null()) // Redirect stderr to null to prevent ffmpeg messages from appearing in the terminal
         .spawn()?;
 
     println!("Screen capture started successfully.");
