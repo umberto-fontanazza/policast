@@ -3,7 +3,7 @@ use crate::crop::ScreenCrop;
 use crate::screen::Screen;
 use crate::settings::{Settings, CAPTURE_HEIGHT};
 use crate::{ffmpeg, util};
-use egui::{Context, Image, Pos2, Rect, TextureHandle, Ui, Vec2};
+use egui::{Pos2, Rect};
 use refbox::Ref;
 use std::io::{self, Read};
 use std::path::PathBuf;
