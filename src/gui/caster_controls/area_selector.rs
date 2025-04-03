@@ -3,8 +3,8 @@ use egui::Rect;
 use super::Gui;
 
 impl Gui {
-    pub fn area_selector(&mut self, ui: &mut egui::Ui) {
-        let pointer = ui.input(|i| i.pointer.clone()); // Usa un closure per accedere al pointer
+    pub fn area_selector(&mut self, ui: &mut egui::Ui, rect: &Rect) {
+        let pointer = ui.input(|i| i.pointer.clone());
         let capturer = &mut self.capturer;
         if capturer.selecting_area {
             // Cattura il clic iniziale
