@@ -19,7 +19,7 @@ impl Gui {
             .preview_texture
             .as_mut()
             .expect("Texture should be set");
-        if self.capturer.is_recording {
+        if self.capturer.is_recording() {
             let frame_receiver = self.capturer.frame_receiver();
             let frame = frame_receiver.recv().unwrap();
             util::update_texture(texture, frame);

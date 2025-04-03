@@ -14,7 +14,7 @@ use std::thread::{spawn, JoinHandle};
 pub struct Capturer {
     capture_devices: Vec<Screen>,
     selected_device: Option<String>,
-    pub is_recording: bool,
+    is_recording: bool,
     helper_handle: Option<(JoinHandle<()>, Receiver<Frame>, Sender<StopSignal>)>,
     settings: Option<Ref<Settings>>,
     pub selecting_area: bool, // Flag per la selezione dell'area
