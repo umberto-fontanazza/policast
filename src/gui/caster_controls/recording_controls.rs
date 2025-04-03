@@ -8,7 +8,9 @@ impl Gui {
         if self.first_route_render {
             self.preview_texture =
                 Some(ctx.load_texture("preview", ColorImage::default(), Default::default()));
-            self.capturer.start_recording();
+            if !self.capturer.is_recording() {
+                self.capturer.start_recording();
+            }
         }
         if ui.button("Back to device selection").clicked() {
             self.capturer.stop_recording();
