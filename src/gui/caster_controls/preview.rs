@@ -4,7 +4,7 @@ use super::Gui;
 use egui::{ColorImage, Context, Image, Vec2};
 
 impl Gui {
-    pub fn recording_controls(&mut self, ui: &mut egui::Ui, ctx: &Context) {
+    pub fn preview(&mut self, ui: &mut egui::Ui, ctx: &Context) {
         if self.first_route_render {
             self.preview_texture =
                 Some(ctx.load_texture("preview", ColorImage::default(), Default::default()));

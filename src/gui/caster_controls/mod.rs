@@ -16,7 +16,7 @@ impl Gui {
             self.route_to(Route::CasterSettings);
         }
 
-        self.recording_controls(ui, ctx);
+        self.preview(ui, ctx);
 
         // Area selection UI
         if ui.button("Start Area Selection").clicked() {
