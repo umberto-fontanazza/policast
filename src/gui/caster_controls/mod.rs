@@ -24,10 +24,8 @@ impl Gui {
             self.route_to(Route::CasterDeviceSelection);
         }
 
-        let rect = self.preview(ui, ctx);
-        // dbg!(&rect);
+        let preview_rectangle = self.preview(ui, ctx);
 
-        // Area selection UI
         if ui.button("Start Area Selection").clicked() {
             self.capturer.selecting_area = true;
             self.capturer.start_point = None;
@@ -35,7 +33,6 @@ impl Gui {
             self.capturer.selected_area = None;
         }
 
-        // Handle the area selection
-        self.area_selector(ui, &rect);
+        self.area_selector(ui, &preview_rectangle);
     }
 }
