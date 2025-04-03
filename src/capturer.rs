@@ -110,7 +110,7 @@ impl Capturer {
         let device = self
             .capture_devices
             .iter_mut()
-            .find(|device| device.name().eq(&selected))
+            .find(|device| device.handle().eq(&selected))
             .expect("Selected device should be found among devices");
         self.selected_area = Some(device.crop(preview_rect, crop));
     }
