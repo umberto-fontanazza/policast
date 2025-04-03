@@ -1,0 +1,1 @@
+clear; rm stderr.txt; cargo run --release 2> stderr.txt
