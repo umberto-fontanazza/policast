@@ -1,6 +1,6 @@
 mod area_selector;
 mod device_selector;
-mod recording_controls;
+mod preview;
 use egui::Context;
 
 use super::{Gui, Route};
