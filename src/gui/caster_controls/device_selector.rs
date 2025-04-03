@@ -46,7 +46,7 @@ impl Gui {
                         self.capturer
                             .set_selected_device(Some(device.handle().to_string()))
                             .expect("Couldn't set the selected device");
-                        self.route_to(Route::CasterControls);
+                        return self.route_to(Route::CasterControls);
                     }
                 });
             });

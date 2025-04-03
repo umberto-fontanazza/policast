@@ -13,7 +13,7 @@ impl Gui {
         }
 
         if ui.button("Go to settings").clicked() {
-            self.route_to(Route::CasterSettings);
+            return self.route_to(Route::CasterSettings);
         }
 
         if ui.button("Back to device selection").clicked() {
@@ -21,7 +21,7 @@ impl Gui {
             self.capturer
                 .set_selected_device(None)
                 .expect("Couldn't clear device selection");
-            self.route_to(Route::CasterDeviceSelection);
+            return self.route_to(Route::CasterDeviceSelection);
         }
 
         let preview_rectangle = self.preview(ui, ctx);

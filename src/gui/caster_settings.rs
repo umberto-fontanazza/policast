@@ -7,7 +7,7 @@ impl Gui {
             self.text_buffer = path.to_str().unwrap().into();
         }
         if ui.button("Back").clicked() {
-            self.route_to(Route::CasterControls);
+            return self.route_to(Route::CasterControls);
         }
         ui.label("Edit save location: ");
         ui.add(egui::TextEdit::singleline(&mut self.text_buffer));

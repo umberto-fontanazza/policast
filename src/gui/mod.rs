@@ -50,6 +50,7 @@ impl Gui {
         }
     }
 
+    /* Remember to return right after using this function to stop the rendering of the old route */
     fn route_to(&mut self, destination: Route) {
         self.first_route_render = true;
         self._route = destination;
