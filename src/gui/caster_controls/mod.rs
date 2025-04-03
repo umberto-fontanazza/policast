@@ -16,6 +16,14 @@ impl Gui {
             self.route_to(Route::CasterSettings);
         }
 
+        if ui.button("Back to device selection").clicked() {
+            self.capturer.stop_recording();
+            self.capturer
+                .set_selected_device(None)
+                .expect("Couldn't clear device selection");
+            self.route_to(Route::CasterDeviceSelection);
+        }
+
         self.preview(ui, ctx);
 
         // Area selection UI

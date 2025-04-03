@@ -12,13 +12,6 @@ impl Gui {
                 self.capturer.start_recording();
             }
         }
-        if ui.button("Back to device selection").clicked() {
-            self.capturer.stop_recording();
-            self.capturer
-                .set_selected_device(None)
-                .expect("Couldn't clear device selection");
-            self.route_to(Route::CasterDeviceSelection);
-        }
 
         if self.capturer.is_recording {
             let texture = self
