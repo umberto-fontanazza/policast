@@ -44,13 +44,5 @@ impl Gui {
                 egui::Stroke::new(1.0, egui::Color32::GRAY),
             );
         }
-
-        // // Debug information on area selection
-        // if let Some(area) = capturer.selected_area {
-        //     let (x, y, width, height) = (area.left(), area.top(), area.width(), area.height());
-        //     ui.label(format!(
-        //         "Selected Area: Position ({x}, {y}), Size ({width}, {height})"
-        //     ));
-        // }
     }
 }
