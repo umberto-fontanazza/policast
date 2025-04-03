@@ -14,7 +14,7 @@ use std::thread::{spawn, JoinHandle};
 pub struct Capturer {
     capture_devices: Vec<Screen>,
     selected_device: Option<String>,
-    is_recording: bool,
+    pub is_recording: bool,
     helper_handle: Option<(JoinHandle<()>, Receiver<Frame>, Sender<StopSignal>)>,
     settings: Option<Ref<Settings>>,
     pub selecting_area: bool, // Flag per la selezione dell'area
@@ -107,23 +107,9 @@ impl Capturer {
         self.is_recording
     }
 
-    pub fn render(&mut self, ui: &mut Ui, ctx: &Context, texture: &mut TextureHandle) {
-        match self.is_recording {
-            true => {
-                let (_, frame_receiver, __) = self.helper_handle.as_ref().unwrap();
-                let frame = frame_receiver.recv().unwrap();
-                util::update_texture(texture, frame);
-                ui.add(
-                    Image::new(&(*texture))
-                        .maintain_aspect_ratio(true)
-                        .fit_to_fraction(Vec2::new(1.0, 1.0)),
-                );
-                ctx.request_repaint();
-            }
-            false => {
-                ui.label("Capturer not recoding");
-            }
-        }
+    pub fn frame_receiver(&mut self) -> &mut Receiver<Frame> {
+        let (_, rx, __) = self.helper_handle.as_mut().unwrap();
+        rx
     }
 }
 
