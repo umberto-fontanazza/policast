@@ -29,8 +29,8 @@ impl Gui {
         if pointer.any_released() && capturer.start_point.is_some() && capturer.end_point.is_some()
         {
             if let (Some(start), Some(end)) = (capturer.start_point, capturer.end_point) {
-                capturer.
-                // capturer.selected_area = Some(capturer.sel);// Some(Rect::from_two_pos(start, end));
+                let crop = Rect::from_two_pos(start, end);
+                capturer.set_selected_area(preview_rect, &crop);
                 capturer.selecting_area = false;
             }
         }

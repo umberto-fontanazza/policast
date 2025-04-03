@@ -18,7 +18,7 @@ pub struct Capturer {
     helper_handle: Option<(JoinHandle<()>, Receiver<Frame>, Sender<StopSignal>)>,
     settings: Option<Ref<Settings>>,
     pub selecting_area: bool, // Flag per la selezione dell'area
-    pub selected_area: Option<Rect>,
+    pub selected_area: Option<ScreenCrop>,
     pub start_point: Option<Pos2>, // Punto iniziale della selezione
     pub end_point: Option<Pos2>,   // Punto finale della selezione
 }
@@ -58,7 +58,7 @@ impl Capturer {
                 .find(|screen| screen.handle().eq(device))
                 .expect("Selected device hanlde is inconsistent with available devices");
             self.is_recording = true;
-            let crop = self.selected_area.map(|rect| ScreenCrop::from(rect));
+            let crop = self.selected_area.clone();
             let handle = _start_recording(crop, device.clone(), save_dir);
             self.helper_handle = Some(handle);
             Ok(())
@@ -101,6 +101,18 @@ impl Capturer {
                 "Device index not found",
             ))
         }
+    }
+
+    pub fn set_selected_area(&mut self, preview_rect: &Rect, crop: &Rect) {
+        let selected = self
+            .get_selected_device()
+            .expect("Device should be selected");
+        let device = self
+            .capture_devices
+            .iter_mut()
+            .find(|device| device.name().eq(&selected))
+            .expect("Selected device should be found among devices");
+        self.selected_area = Some(device.crop(preview_rect, crop));
     }
 
     pub fn is_recording(&self) -> bool {

@@ -65,7 +65,7 @@ impl Screen {
             .collect::<Vec<Screen>>()
     }
 
-    pub fn crop(&mut self, source: Rect, crop: Rect) -> ScreenCrop {
+    pub fn crop(&mut self, source: &Rect, crop: &Rect) -> ScreenCrop {
         let x = crop.left() - source.left();
         let y = crop.top() - source.top();
         let (width, height) = (crop.width(), crop.height());
