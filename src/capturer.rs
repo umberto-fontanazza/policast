@@ -147,28 +147,40 @@ fn _start_recording(
                 .expect("Should start screen capture");
 
         let mut buffer = vec![0u8; width * height * 4];
-        {
-            let out = subprocess.stdout.as_mut().expect("Couldn't get stdout");
-            while out.read_exact(&mut buffer).is_ok() {
-                match receiver.try_recv() {
-                    Ok(_) => {
-                        break; // received signal to stop
-                    }
-                    Err(e) => match e {
-                        std::sync::mpsc::TryRecvError::Empty => {}
-                        std::sync::mpsc::TryRecvError::Disconnected => {
-                            println!("This shouldn't happen");
-                            break;
-                        }
-                    },
+        let stdout = subprocess
+            .stdout
+            .as_mut()
+            .expect("Should borrow mutably stdout");
+        let stdin = subprocess.stdin.take().expect("Should take stdin");
+        while stdout.read_exact(&mut buffer).is_ok() {
+            match receiver.try_recv() {
+                Ok(_) => {
+                    ffmpeg::stop_request(stdin);
+                    break; // received signal to stop
                 }
-                let frame: Frame = util::frame_from_buffer(width, height, buffer.clone());
-                frame_sender
-                    .send(frame)
-                    .expect("Couldn't send frame over channel");
+                Err(e) => match e {
+                    std::sync::mpsc::TryRecvError::Empty => {}
+                    std::sync::mpsc::TryRecvError::Disconnected => {
+                        println!("This shouldn't happen");
+                        break;
+                    }
+                },
+            }
+            let frame: Frame = util::frame_from_buffer(width, height, buffer.clone());
+            frame_sender
+                .send(frame)
+                .expect("Couldn't send frame over channel");
+        }
+        loop {
+            let res = stdout.read(&mut buffer);
+            match res {
+                Ok(n) if n == 0 => break,
+                Ok(_) => (),
+                Err(_) => panic!("Failed to read from subprocess stdout"),
             }
         }
-        ffmpeg::stop_screen_capture(subprocess).unwrap();
+        let _ = subprocess.wait();
+        println!("Subprocess terminated gracefully");
     });
     (handle, frame_receiver, sender)
 }

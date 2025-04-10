@@ -4,9 +4,9 @@ use egui::ColorImage;
 use image::{load_from_memory_with_format, RgbImage};
 use regex::Regex;
 use std::collections::HashMap;
-use std::io::{self, Write};
+use std::io::{self, Read, Write};
 use std::path::Path;
-use std::process::{Child, Command, Stdio};
+use std::process::{Child, ChildStdin, Command, Stdio};
 
 fn list_screen_capture_devices_macos() -> io::Result<HashMap<String, String>> {
     let output = Command::new("ffmpeg")
@@ -160,6 +160,10 @@ pub fn start_screen_capture(
     println!("Screen capture started successfully.");
 
     Ok(ffmpeg_command)
+}
+
+pub fn stop_request(mut stdin: ChildStdin) {
+    writeln!(stdin, "q").expect("Should write \"q\" to stdin");
 }
 
 pub fn stop_screen_capture(mut ffmpeg_command: Child) -> io::Result<()> {
