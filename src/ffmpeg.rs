@@ -1,5 +1,6 @@
 use crate::crop::ScreenCrop;
 use crate::settings::CAPTURE_FPS;
+use crate::util;
 use egui::ColorImage;
 use image::{load_from_memory_with_format, RgbImage};
 use regex::Regex;
@@ -162,17 +163,11 @@ pub fn start_screen_capture(
     Ok(ffmpeg_command)
 }
 
-pub fn stop_request(mut stdin: ChildStdin) {
-    writeln!(stdin, "q").expect("Should write \"q\" to stdin");
-}
-
-pub fn stop_screen_capture(mut ffmpeg_command: Child) -> io::Result<()> {
-    if let Some(stdin) = ffmpeg_command.stdin.as_mut() {
-        writeln!(stdin, "q").expect("Failed to write to stdin");
-        ffmpeg_command.wait()?;
-        println!("Screen capture stopped successfully.");
-    }
-    Ok(())
+pub fn stop_screen_capture(mut subprocess: Child, buffer: &mut [u8]) {
+    writeln!(subprocess.stdin.take().unwrap(), "q").expect("Should write \"q\" to stdin");
+    util::read_while_full(subprocess.stdout.as_mut().unwrap(), buffer);
+    let _ = subprocess.wait();
+    println!("ffmpeg subprocess exited gracefully");
 }
 
 pub fn ffmpeg_is_installed() -> bool {

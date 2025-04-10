@@ -23,9 +23,7 @@ pub fn frame_from_buffer(width: usize, height: usize, buffer: Vec<u8>) -> Frame 
     .expect("Failed to create frame from buffer")
 }
 
-pub fn read_while_full(stdout: &mut ChildStdout, buffer: Option<&mut [u8]>) {
-    let mut _buffer = Vec::<u8>::with_capacity(if buffer.is_none() { 1024 } else { 0 });
-    let buffer = buffer.or(Some(&mut _buffer)).unwrap();
+pub fn read_while_full(stdout: &mut ChildStdout, buffer: &mut [u8]) {
     loop {
         let read_result = stdout.read(buffer);
         match read_result {

@@ -151,12 +151,11 @@ fn _start_recording(
             .stdout
             .as_mut()
             .expect("Should borrow mutably stdout");
-        let stdin = subprocess.stdin.take().expect("Should take stdin");
         while stdout.read_exact(&mut buffer).is_ok() {
             match receiver.try_recv() {
                 Ok(_) => {
-                    ffmpeg::stop_request(stdin);
-                    break; // received signal to stop
+                    ffmpeg::stop_screen_capture(subprocess, &mut buffer);
+                    return;
                 }
                 Err(e) => match e {
                     std::sync::mpsc::TryRecvError::Empty => {}
@@ -171,8 +170,6 @@ fn _start_recording(
                 .send(frame)
                 .expect("Couldn't send frame over channel");
         }
-        util::read_while_full(stdout, Some(&mut buffer));
-        let _ = subprocess.wait();
     });
     (handle, frame_receiver, sender)
 }
