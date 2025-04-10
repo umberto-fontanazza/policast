@@ -102,7 +102,9 @@ impl Playback {
                     Some(t) => {
                         if now.duration_since(t) > CAPTURE_PERIOD {
                             self.refresh_timestamp = Some(t + CAPTURE_PERIOD);
-                            self.next_frame(ui, ctx);
+                            if self.next_frame(ui, ctx).is_err() {
+                                self.stop();
+                            }
                         } else {
                             ui.image(self.texture.as_ref().unwrap());
                             ctx.request_repaint();
@@ -110,7 +112,7 @@ impl Playback {
                     }
                     None => {
                         self.refresh_timestamp = Some(now);
-                        self.next_frame(ui, ctx);
+                        self.next_frame(ui, ctx).expect("Decoder should send the frame to be rendered on the frame sender before closing the channel")
                     }
                 }
             }
@@ -120,13 +122,21 @@ impl Playback {
         }
     }
 
-    fn next_frame(&mut self, ui: &mut Ui, ctx: &egui::Context) {
+    fn next_frame(&mut self, ui: &mut Ui, ctx: &egui::Context) -> Result<(), ()> {
         if let Status::Playing(decoder) = &mut self.status {
-            let frame: Frame = decoder.recv().expect("Failed to receive frame");
+            let frame: Frame = match decoder.recv() {
+                Ok(frame) => frame,
+                Err(_) => {
+                    return Err(());
+                }
+            };
             let texture = self.texture.as_mut().expect("Missing texture handle");
             util::update_texture(texture, frame);
             ui.image(&(*texture));
             ctx.request_repaint();
+            Ok(())
+        } else {
+            Err(())
         }
     }
 }

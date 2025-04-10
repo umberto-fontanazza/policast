@@ -1,9 +1,9 @@
 use crate::settings::CAPTURE_FPS;
-use crate::util;
 use crate::{
     alias::{Frame, StopSignal},
     playback::{HEIGHT, WIDTH},
 };
+use crate::{ffmpeg, util};
 use std::{
     io::Read,
     process::{Command, Stdio},
@@ -23,21 +23,22 @@ impl Decoder {
         let (frame_sender, frame_receiver) = channel::<Frame>();
 
         let handle = thread::spawn(move || {
-            let mut process = Command::new("ffmpeg")
+            let mut subprocess = Command::new("ffmpeg")
                 .args(get_ffmpeg_decoder_args(video_url.as_str()))
                 .stdin(Stdio::piped())
                 .stdout(Stdio::piped())
                 .spawn()
                 .expect("Failed to start FFmpeg");
 
-            let mut stdout = process.stdout.take().expect("Failed to take stdout");
+            let mut stdout = subprocess.stdout.take().expect("Failed to take stdout");
             let mut buffer = vec![0u8; WIDTH * HEIGHT * 4];
 
             // Continuously read the video frames from stdout
             while stdout.read_exact(&mut buffer).is_ok() {
                 match receiver.try_recv() {
                     Ok(_) => {
-                        break; // received signal to stop
+                        ffmpeg::stop_screen_capture(subprocess, &mut buffer);
+                        return; // received signal to stop
                     }
                     Err(e) => match e {
                         std::sync::mpsc::TryRecvError::Empty => {}
@@ -52,7 +53,6 @@ impl Decoder {
                     .send(frame)
                     .expect("Couldn't send frame over channel");
             }
-            process.kill().expect("Couldn't kill process");
         });
         Self {
             sender,
