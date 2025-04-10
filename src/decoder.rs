@@ -30,7 +30,7 @@ impl Decoder {
                 .spawn()
                 .expect("Failed to start FFmpeg");
 
-            let mut stdout = subprocess.stdout.take().expect("Failed to take stdout");
+            let stdout = subprocess.stdout.as_mut().expect("Failed to take stdout");
             let mut buffer = vec![0u8; WIDTH * HEIGHT * 4];
 
             // Continuously read the video frames from stdout
