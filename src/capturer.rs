@@ -171,16 +171,8 @@ fn _start_recording(
                 .send(frame)
                 .expect("Couldn't send frame over channel");
         }
-        loop {
-            let res = stdout.read(&mut buffer);
-            match res {
-                Ok(n) if n == 0 => break,
-                Ok(_) => (),
-                Err(_) => panic!("Failed to read from subprocess stdout"),
-            }
-        }
+        util::read_while_full(stdout, Some(&mut buffer));
         let _ = subprocess.wait();
-        println!("Subprocess terminated gracefully");
     });
     (handle, frame_receiver, sender)
 }
