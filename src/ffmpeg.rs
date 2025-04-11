@@ -1,4 +1,4 @@
-use crate::crop::ScreenCrop;
+use crate::crop::{CropFilter, RelativeScreenCrop};
 use crate::settings::CAPTURE_FPS;
 use crate::util;
 use egui::ColorImage;
@@ -69,7 +69,7 @@ pub fn list_screen_capture_devices() -> io::Result<HashMap<String, String>> {
 
 fn get_ffmpeg_args(
     resolution: Option<usize>,
-    crop: Option<ScreenCrop>,
+    crop: Option<CropFilter>,
     target: &str,
     save_dir: &Path,
 ) -> Vec<String> {
@@ -145,7 +145,7 @@ fn get_ffmpeg_args(
 
 pub fn start_screen_capture(
     resolution: Option<usize>,
-    crop: Option<ScreenCrop>,
+    crop: Option<CropFilter>,
     target: &str,
     save_dir: &Path,
 ) -> io::Result<Child> {

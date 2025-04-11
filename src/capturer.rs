@@ -1,5 +1,5 @@
 use crate::alias::{Frame, StopSignal};
-use crate::crop::ScreenCrop;
+use crate::crop::{CropFilter, RelativeScreenCrop};
 use crate::screen::Screen;
 use crate::settings::{Settings, CAPTURE_HEIGHT};
 use crate::{ffmpeg, util};
@@ -18,7 +18,7 @@ pub struct Capturer {
     helper_handle: Option<(JoinHandle<()>, Receiver<Frame>, Sender<StopSignal>)>,
     settings: Option<Ref<Settings>>,
     pub selecting_area: bool, // Flag per la selezione dell'area
-    pub selected_area: Option<ScreenCrop>,
+    pub selected_area: Option<RelativeScreenCrop>,
     pub start_point: Option<Pos2>, // Punto iniziale della selezione
     pub end_point: Option<Pos2>,   // Punto finale della selezione
 }
@@ -104,15 +104,7 @@ impl Capturer {
     }
 
     pub fn set_selected_area(&mut self, preview_rect: &Rect, crop: &Rect) {
-        let selected = self
-            .get_selected_device()
-            .expect("Device should be selected");
-        let device = self
-            .capture_devices
-            .iter_mut()
-            .find(|device| device.handle().eq(&selected))
-            .expect("Selected device should be found among devices");
-        self.selected_area = Some(device.crop(preview_rect, crop));
+        self.selected_area = Some(RelativeScreenCrop::new(preview_rect, crop));
     }
 
     pub fn is_recording(&self) -> bool {
@@ -126,18 +118,19 @@ impl Capturer {
 }
 
 fn _start_recording(
-    crop: Option<ScreenCrop>,
+    relative_crop: Option<RelativeScreenCrop>,
     device: Screen,
     save_dir: PathBuf,
 ) -> (JoinHandle<()>, Receiver<Frame>, Sender<StopSignal>) {
     let mut device = device;
+    let height = CAPTURE_HEIGHT;
+    let width = device.width() * height / device.height();
+    let crop = relative_crop
+        .as_ref()
+        .map(|rel| CropFilter::from(rel, width, height));
     let (width, height) = match crop {
-        Some(ref crop) => (crop.width, crop.height),
-        None => {
-            let height = CAPTURE_HEIGHT;
-            let width = device.width() * height / device.height();
-            (width, height)
-        }
+        Some(ref c) => (c.width, c.height),
+        None => (width, height),
     };
     let (sender, receiver) = channel::<StopSignal>();
     let (frame_sender, frame_receiver) = channel::<Frame>();
