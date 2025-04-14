@@ -25,11 +25,6 @@ impl Gui {
             util::update_texture(texture, frame);
             ctx.request_repaint();
         }
-        ui.add(
-            Image::new(&(*texture))
-                .maintain_aspect_ratio(true)
-                .fit_to_fraction(Vec2::new(1.0, 1.0)),
-        )
-        .rect
+        ui.add(Image::new(&(*texture)).shrink_to_fit()).rect
     }
 }
