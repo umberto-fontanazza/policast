@@ -43,23 +43,31 @@ pub struct CropFilter {
 impl CropFilter {
     pub fn from(relative_crop: &RelativeScreenCrop, width: usize, height: usize) -> Self {
         let (width, height) = (Fraction::from(width), Fraction::from(height));
+        let x: usize = (relative_crop.x * width)
+            .round()
+            .try_into()
+            .expect("Should cast Fraction to usize");
+        let y: usize = (relative_crop.y * height)
+            .round()
+            .try_into()
+            .expect("Should cast Fraction to usize");
+        let width: usize = (relative_crop.width * width)
+            .round()
+            .try_into()
+            .expect("Should cast Fraction to usize");
+        let height: usize = (relative_crop.height * height)
+            .round()
+            .try_into()
+            .expect("Should cast Fraction to usize");
         Self {
-            x: (relative_crop.x * width)
-                .round()
-                .try_into()
-                .expect("Should cast Fraction to usize"),
-            y: (relative_crop.y * height)
-                .round()
-                .try_into()
-                .expect("Should cast Fraction to usize"),
-            width: (relative_crop.width * width)
-                .round()
-                .try_into()
-                .expect("Should cast Fraction to usize"),
-            height: (relative_crop.height * height)
-                .round()
-                .try_into()
-                .expect("Should cast Fraction to usize"),
+            x,
+            y,
+            width: truncate_to_even(width),
+            height: truncate_to_even(height),
         }
     }
+}
+
+fn truncate_to_even(number: usize) -> usize {
+    (number >> 1) << 1
 }
