@@ -20,7 +20,6 @@ egui_extras ="0.29.1"
 local-ip-address = "0.6.1"
 regex = "1.10.5"
 image = "0.25.2"
-refbox = "0.3.0"
 replace_with = "0.1.7"
 axum = "0.8.1"
 tokio = { version = "1.44.1", features = ["rt", "macros", "rt-multi-thread"] } 

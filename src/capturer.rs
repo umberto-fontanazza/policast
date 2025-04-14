@@ -3,11 +3,12 @@ use crate::crop::{CropFilter, RelativeScreenCrop};
 use crate::screen::Screen;
 use crate::settings::{Settings, CAPTURE_HEIGHT};
 use crate::{ffmpeg, util};
+use egui::mutex::RwLock;
 use egui::{Pos2, Rect};
-use refbox::Ref;
 use std::io::{self, Read};
 use std::path::PathBuf;
 use std::sync::mpsc::{channel, Receiver, Sender};
+use std::sync::Arc;
 use std::thread::{spawn, JoinHandle};
 
 #[derive(Default)]
@@ -16,7 +17,7 @@ pub struct Capturer {
     selected_device: Option<String>,
     is_recording: bool,
     helper_handle: Option<(JoinHandle<()>, Receiver<Frame>, Sender<StopSignal>)>,
-    settings: Option<Ref<Settings>>,
+    settings: Option<Arc<RwLock<Settings>>>,
     pub selecting_area: bool, // Flag per la selezione dell'area
     pub selected_area: Option<RelativeScreenCrop>,
     pub start_point: Option<Pos2>, // Punto iniziale della selezione
@@ -24,7 +25,7 @@ pub struct Capturer {
 }
 
 impl Capturer {
-    pub fn new(settings: Ref<Settings>) -> Self {
+    pub fn new(settings: Arc<RwLock<Settings>>) -> Self {
         Self {
             settings: Some(settings),
             ..Default::default()
@@ -40,14 +41,7 @@ impl Capturer {
     }
 
     pub fn start_recording(&mut self) -> io::Result<()> {
-        let save_dir = {
-            self.settings
-                .as_ref()
-                .expect("Videocaster should have access to settings")
-                .try_borrow_mut()
-                .expect("Should be able to access settings")
-                .get_save_dir()
-        };
+        let save_dir = self.settings.as_ref().unwrap().read().get_save_dir();
         if !save_dir.is_dir() {
             std::fs::create_dir_all(&save_dir).expect("Should create dir if missing");
         }

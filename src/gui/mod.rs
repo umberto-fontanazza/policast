@@ -7,8 +7,8 @@ use crate::playback::Playback;
 use crate::server::Server;
 use crate::settings::Settings;
 use eframe;
-use egui::TextureHandle;
-use refbox::{Ref, RefBox};
+use egui::{mutex::RwLock, TextureHandle};
+use std::sync::Arc;
 
 #[derive(Default, Clone, Copy, PartialEq)]
 enum Route {
@@ -21,7 +21,7 @@ enum Route {
 }
 
 pub struct Gui {
-    settings: Ref<Settings>,
+    settings: Arc<RwLock<Settings>>,
     thumbnail_textures: Option<Vec<TextureHandle>>, //used to preview the capture devices
     preview_texture: Option<TextureHandle>,
     _route: Route, // don't set this, use self.route_to() instead. This is used to reuse calculations between renders.
@@ -34,13 +34,14 @@ pub struct Gui {
 }
 
 impl Gui {
-    pub fn new(cc: &eframe::CreationContext<'_>, s: &RefBox<Settings>) -> Self {
-        // egui_extras::install_image_loaders(ctx);
+    pub fn new(cc: &eframe::CreationContext<'_>) -> Self {
+        let settings = Arc::new(RwLock::new(Settings::default()));
+        let settings_clone = settings.clone();
         Self {
-            settings: s.create_ref(),
+            settings,
             thumbnail_textures: None,
             preview_texture: None,
-            capturer: Capturer::new(s.create_ref()),
+            capturer: Capturer::new(settings_clone),
             _route: Route::default(),
             first_route_render: true,
             video_link: "".to_string(),

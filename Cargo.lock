@@ -2266,7 +2266,6 @@ dependencies = [
  "fraction",
  "image",
  "local-ip-address",
- "refbox",
  "regex",
  "replace_with",
  "tokio",
@@ -3118,12 +3117,6 @@ checksum = "9b6dfecf2c74bce2466cabf93f6664d6998a69eb21e39f4207930065b27b771f"
 dependencies = [
  "bitflags 2.6.0",
 ]
-
-[[package]]
-name = "refbox"
-version = "0.3.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1f08135c66c2beb6cd5c9e3286daae2bd88393a830e69b432e2e5a5b52e5170d"
 
 [[package]]
 name = "regex"

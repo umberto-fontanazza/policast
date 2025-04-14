@@ -9,7 +9,7 @@ use crate::server::Server;
 impl Gui {
     pub fn caster_controls(&mut self, ui: &mut egui::Ui, ctx: &Context) {
         if self.first_route_render & self.hls_server.is_none() {
-            self.hls_server = Some(Server::new());
+            self.hls_server = Some(Server::new(self.settings.clone()));
         }
 
         if ui.button("Go to settings").clicked() {
