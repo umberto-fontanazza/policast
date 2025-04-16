@@ -1,8 +1,7 @@
 use crate::save::Save;
-use crate::settings::CAPTURE_FPS;
 use crate::{
     alias::{Frame, StopSignal},
-    playback::{HEIGHT, WIDTH},
+    settings::{CAPTURE_FPS, HEIGHT, WIDTH},
 };
 use crate::{ffmpeg, util};
 use std::path::PathBuf;

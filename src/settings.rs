@@ -7,6 +7,10 @@ pub const CAPTURE_FPS: usize = 25;
 pub const CAPTURE_PERIOD: Duration = Duration::from_millis(1000 / CAPTURE_FPS as u64); //TODO: check cast
 pub const SERVER_PORT: u16 = 3000;
 
+// playback settings
+pub const WIDTH: usize = 1280;
+pub const HEIGHT: usize = 720;
+
 pub struct Settings {
     save_dir: PathBuf,
 }
