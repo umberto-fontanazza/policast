@@ -5,6 +5,7 @@ use std::time::Duration;
 pub const CAPTURE_HEIGHT: usize = 1080;
 pub const CAPTURE_FPS: usize = 25;
 pub const CAPTURE_PERIOD: Duration = Duration::from_millis(1000 / CAPTURE_FPS as u64); //TODO: check cast
+pub const SERVER_PORT: u16 = 3000;
 
 pub struct Settings {
     save_dir: PathBuf,
