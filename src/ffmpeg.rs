@@ -67,6 +67,21 @@ pub fn list_screen_capture_devices() -> io::Result<HashMap<String, String>> {
     }
 }
 
+pub fn spawn_raw_encoder(width: usize, height: usize, filename: &str) -> Child {
+    let size = format!("{width}x{height}");
+    let filename = format!("{filename}.mp4");
+    let framerate = CAPTURE_FPS.to_string();
+    Command::new("ffmpeg")
+        .args([
+            "-f", "rawvideo", "-pix_fmt", "rgba", "-s", &size, "-r", &framerate, "-i", "-",
+            &filename,
+        ])
+        .stdin(Stdio::piped())
+        .stderr(Stdio::null())
+        .spawn()
+        .expect("Should spawn an ffmpeg subprocess")
+}
+
 fn get_ffmpeg_args(
     resolution: Option<usize>,
     crop: Option<CropFilter>,

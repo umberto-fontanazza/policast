@@ -6,6 +6,7 @@ pub mod ffmpeg;
 pub mod gui;
 pub mod hotkey;
 pub mod playback;
+pub mod save;
 pub mod screen;
 pub mod server;
 pub mod settings;

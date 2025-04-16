@@ -1,9 +1,11 @@
+use crate::save::Save;
 use crate::settings::CAPTURE_FPS;
 use crate::{
     alias::{Frame, StopSignal},
     playback::{HEIGHT, WIDTH},
 };
 use crate::{ffmpeg, util};
+use std::path::PathBuf;
 use std::{
     io::Read,
     process::{Command, Stdio},
@@ -15,10 +17,12 @@ pub struct Decoder {
     sender: Sender<StopSignal>,
     receiver: Receiver<Frame>,
     handle: Option<JoinHandle<()>>,
+    save: Option<Save>,
 }
 
 impl Decoder {
     pub fn new(video_url: String) -> Self {
+        let save: bool = true; //TODO: this must be a @param
         let (sender, receiver) = channel::<()>();
         let (frame_sender, frame_receiver) = channel::<Frame>();
 
@@ -58,11 +62,25 @@ impl Decoder {
             sender,
             receiver: frame_receiver,
             handle: Some(handle),
+            save: Some(Save::new(
+                PathBuf::from("/Users/umbertofontanazza/Projects/Polito/api-programming/mpsc/save"), //TODO: directory selection
+                WIDTH,
+                HEIGHT,
+            )),
         }
     }
 
-    pub fn recv(&self) -> Result<Frame, RecvError> {
-        self.receiver.recv()
+    pub fn recv(&mut self) -> Result<Frame, RecvError> {
+        let res = self.receiver.recv();
+        match res {
+            // send frame to mp4 encoder subprocess for saving
+            Ok(ref frame) => match self.save {
+                Some(ref mut save) => save.frame(&frame),
+                None => (),
+            },
+            Err(_) => (),
+        }
+        res
     }
 }
 
