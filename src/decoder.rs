@@ -21,8 +21,7 @@ pub struct Decoder {
 }
 
 impl Decoder {
-    pub fn new(video_url: String) -> Self {
-        let save: bool = true; //TODO: this must be a @param
+    pub fn new(video_url: String, save: bool) -> Self {
         let (sender, receiver) = channel::<()>();
         let (frame_sender, frame_receiver) = channel::<Frame>();
 
@@ -62,11 +61,16 @@ impl Decoder {
             sender,
             receiver: frame_receiver,
             handle: Some(handle),
-            save: Some(Save::new(
-                PathBuf::from("/Users/umbertofontanazza/Projects/Polito/api-programming/mpsc/save"), //TODO: directory selection
-                WIDTH,
-                HEIGHT,
-            )),
+            save: match save {
+                true => Some(Save::new(
+                    PathBuf::from(
+                        "/Users/umbertofontanazza/Projects/Polito/api-programming/mpsc/save",
+                    ), //TODO: directory selection
+                    WIDTH,
+                    HEIGHT,
+                )),
+                false => None,
+            },
         }
     }
 

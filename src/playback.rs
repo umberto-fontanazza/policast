@@ -62,6 +62,7 @@ impl Playback {
                     .as_ref()
                     .expect("video_url must be set before playing")
                     .clone(),
+                true,
             )),
             Status::Paused(decoder) => Status::Playing(decoder),
             playing => playing,
