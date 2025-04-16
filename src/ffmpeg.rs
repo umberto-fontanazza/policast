@@ -1,5 +1,5 @@
 use crate::crop::{CropFilter, RelativeScreenCrop};
-use crate::settings::CAPTURE_FPS;
+use crate::settings::{CAPTURE_FPS, HLS_SEGMENT_DURATION};
 use crate::util;
 use egui::ColorImage;
 use image::{load_from_memory_with_format, RgbImage};
@@ -100,6 +100,7 @@ fn get_ffmpeg_args(
     // let video_size = format!("{}x{}", crop.width, crop.height);
     let segment_path = save_dir.join("output_%03d.ts");
     let playlist_path = save_dir.join("output.m3u8");
+    let frames_per_segment = (HLS_SEGMENT_DURATION * CAPTURE_FPS).to_string();
 
     let input_args = if cfg!(target_os = "macos") {
         vec![
@@ -130,6 +131,18 @@ fn get_ffmpeg_args(
         "[out1]",
         "-c:v",
         "libx264",
+        // EXPERIMENTAL
+        "-preset",
+        "ultrafast",
+        "-tune",
+        "zerolatency",
+        // END EXPERIMENTAL
+        "-g",
+        &frames_per_segment,
+        "-keyint_min",
+        &frames_per_segment,
+        "-sc_threshold",
+        "0",
         "-f",
         "hls",
         "-hls_time",

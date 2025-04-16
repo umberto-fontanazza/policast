@@ -6,6 +6,8 @@ pub const CAPTURE_HEIGHT: usize = 1080;
 pub const CAPTURE_FPS: usize = 25;
 pub const CAPTURE_PERIOD: Duration = Duration::from_millis(1000 / CAPTURE_FPS as u64); //TODO: check cast
 pub const SERVER_PORT: u16 = 3000;
+/** Duration in seconds of a single HLS segment */
+pub const HLS_SEGMENT_DURATION: usize = 2;
 
 // playback settings
 pub const DECODER_WIDTH: usize = 1280;
