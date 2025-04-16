@@ -7,7 +7,6 @@ use replace_with::replace_with_or_abort;
 
 pub const WIDTH: usize = 1280;
 pub const HEIGHT: usize = 720;
-pub const FPS: usize = 30;
 
 #[derive(PartialEq)]
 pub enum PlaybackStatus {
