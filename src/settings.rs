@@ -8,27 +8,27 @@ pub const CAPTURE_PERIOD: Duration = Duration::from_millis(1000 / CAPTURE_FPS as
 pub const SERVER_PORT: u16 = 3000;
 
 // playback settings
-pub const WIDTH: usize = 1280;
-pub const HEIGHT: usize = 720;
+pub const DECODER_WIDTH: usize = 1280;
+pub const DECODER_HEIGHT: usize = 720;
 
 pub struct Settings {
-    save_dir: PathBuf,
+    caster_save_dir: PathBuf, // segment files and playlist manifest are stored here
 }
 
 impl Settings {
     pub fn set_save_dir(&mut self, path: &str) {
-        self.save_dir = PathBuf::from(path);
+        self.caster_save_dir = PathBuf::from(path);
     }
 
     pub fn get_save_dir(&self) -> PathBuf {
-        self.save_dir.clone()
+        self.caster_save_dir.clone()
     }
 }
 
 impl Default for Settings {
     fn default() -> Self {
         Self {
-            save_dir: env::current_dir()
+            caster_save_dir: env::current_dir()
                 .expect("Couldn't get the current working directory")
                 .join("capture"),
         }

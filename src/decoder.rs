@@ -1,7 +1,7 @@
 use crate::save::Save;
 use crate::{
     alias::{Frame, StopSignal},
-    settings::{CAPTURE_FPS, HEIGHT, WIDTH},
+    settings::{CAPTURE_FPS, DECODER_HEIGHT, DECODER_WIDTH},
 };
 use crate::{ffmpeg, util};
 use std::path::PathBuf;
@@ -33,7 +33,7 @@ impl Decoder {
                 .expect("Failed to start FFmpeg");
 
             let stdout = subprocess.stdout.as_mut().expect("Failed to take stdout");
-            let mut buffer = vec![0u8; WIDTH * HEIGHT * 4];
+            let mut buffer = vec![0u8; DECODER_WIDTH * DECODER_HEIGHT * 4];
 
             // Continuously read the video frames from stdout
             while stdout.read_exact(&mut buffer).is_ok() {
@@ -50,7 +50,8 @@ impl Decoder {
                         }
                     },
                 }
-                let frame: Frame = util::frame_from_buffer(WIDTH, HEIGHT, buffer.clone());
+                let frame: Frame =
+                    util::frame_from_buffer(DECODER_WIDTH, DECODER_HEIGHT, buffer.clone());
                 frame_sender
                     .send(frame)
                     .expect("Couldn't send frame over channel");
@@ -65,8 +66,8 @@ impl Decoder {
                     PathBuf::from(
                         "/Users/umbertofontanazza/Projects/Polito/api-programming/mpsc/save",
                     ), //TODO: directory selection
-                    WIDTH,
-                    HEIGHT,
+                    DECODER_WIDTH,
+                    DECODER_HEIGHT,
                 )),
                 false => None,
             },
@@ -110,7 +111,7 @@ pub fn get_ffmpeg_decoder_args(video_link: &str) -> Vec<String> {
         "-r".to_owned(),
         format!("{CAPTURE_FPS}"),
         "-vf".to_owned(),
-        format!("fps={CAPTURE_FPS},scale={WIDTH}:{HEIGHT},format=rgba"), // Set resolution and format
+        format!("fps={CAPTURE_FPS},scale={DECODER_WIDTH}:{DECODER_HEIGHT},format=rgba"), // Set resolution and format
         "-pix_fmt".to_owned(),
         "rgba".to_owned(), // Set pixel format
         "-f".to_owned(),
