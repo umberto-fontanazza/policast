@@ -1,4 +1,7 @@
-use std::time::Instant;
+use std::{
+    path::{Path, PathBuf},
+    time::Instant,
+};
 
 use crate::{alias::Frame, decoder::Decoder, settings::CAPTURE_PERIOD, util};
 use eframe::egui;
@@ -51,14 +54,14 @@ impl Playback {
         }
     }
 
-    pub fn play(&mut self) {
+    pub fn play(&mut self, save_path: Option<PathBuf>) {
         replace_with_or_abort(&mut self.status, |status| match status {
             Status::Stopped => Status::Playing(Decoder::new(
                 self.video_link
                     .as_ref()
                     .expect("video_url must be set before playing")
                     .clone(),
-                true,
+                save_path,
             )),
             Status::Paused(decoder) => Status::Playing(decoder),
             playing => playing,

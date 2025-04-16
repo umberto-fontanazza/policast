@@ -18,8 +18,14 @@ impl Gui {
             .clicked()
         {
             if !self.video_link.is_empty() {
-                self.playback.set_video_link(self.video_link.clone()); // Set the video link in the playback instance
-                self.playback.play(); // Start the video playback
+                self.playback.set_video_link(self.video_link.clone());
+                let save_path = self
+                    .settings
+                    .read()
+                    .player_save_dir
+                    .as_ref()
+                    .map(|path| path.clone());
+                self.playback.play(save_path);
             } else {
                 ui.label("Enter a valid link!");
             }

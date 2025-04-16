@@ -4,7 +4,7 @@ use crate::{
     settings::{CAPTURE_FPS, DECODER_HEIGHT, DECODER_WIDTH},
 };
 use crate::{ffmpeg, util};
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::{
     io::Read,
     process::{Command, Stdio},
@@ -20,7 +20,7 @@ pub struct Decoder {
 }
 
 impl Decoder {
-    pub fn new(video_url: String, save: bool) -> Self {
+    pub fn new(video_url: String, save: Option<PathBuf>) -> Self {
         let (sender, receiver) = channel::<()>();
         let (frame_sender, frame_receiver) = channel::<Frame>();
 
@@ -57,20 +57,12 @@ impl Decoder {
                     .expect("Couldn't send frame over channel");
             }
         });
+        let save = save.map(|path| Save::new(path, DECODER_WIDTH, DECODER_HEIGHT));
         Self {
             sender,
             receiver: frame_receiver,
             handle: Some(handle),
-            save: match save {
-                true => Some(Save::new(
-                    PathBuf::from(
-                        "/Users/umbertofontanazza/Projects/Polito/api-programming/mpsc/save",
-                    ), //TODO: directory selection
-                    DECODER_WIDTH,
-                    DECODER_HEIGHT,
-                )),
-                false => None,
-            },
+            save,
         }
     }
 

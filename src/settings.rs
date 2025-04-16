@@ -13,6 +13,7 @@ pub const DECODER_HEIGHT: usize = 720;
 
 pub struct Settings {
     caster_save_dir: PathBuf, // segment files and playlist manifest are stored here
+    pub player_save_dir: Option<PathBuf>,
 }
 
 impl Settings {
@@ -31,6 +32,10 @@ impl Default for Settings {
             caster_save_dir: env::current_dir()
                 .expect("Couldn't get the current working directory")
                 .join("capture"),
+            player_save_dir: Some(PathBuf::from(
+                "/Users/umbertofontanazza/Projects/Polito/api-programming/mpsc/save",
+                //TODO: replace with a suitable prod directory
+            )),
         }
     }
 }
