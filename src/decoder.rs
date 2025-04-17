@@ -4,7 +4,7 @@ use crate::{
     settings::{CAPTURE_FPS, DECODER_HEIGHT, DECODER_WIDTH},
 };
 use crate::{ffmpeg, util};
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use std::{
     io::Read,
     process::{Command, Stdio},

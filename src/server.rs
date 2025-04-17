@@ -1,4 +1,3 @@
-use axum::routing::get;
 use axum::Router;
 use egui::mutex::RwLock;
 use std::sync::Arc;

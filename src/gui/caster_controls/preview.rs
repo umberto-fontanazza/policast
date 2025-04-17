@@ -2,7 +2,7 @@ use crate::util;
 
 use super::Gui;
 use crate::settings::SERVER_PORT;
-use egui::{ColorImage, Context, Image, Rect, Vec2};
+use egui::{ColorImage, Context, Image, Rect};
 use local_ip_address::local_ip;
 
 impl Gui {

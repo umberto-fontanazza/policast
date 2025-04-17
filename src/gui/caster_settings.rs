@@ -12,8 +12,7 @@ impl Gui {
         ui.label("Edit save location: ");
         ui.add(egui::TextEdit::singleline(&mut self.text_buffer));
         if ui.button("Apply changes").clicked() {
-            let a = self
-                .settings
+            self.settings
                 .as_ref()
                 .write()
                 .set_save_dir(&self.text_buffer);

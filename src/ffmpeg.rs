@@ -1,13 +1,13 @@
-use crate::crop::{CropFilter, RelativeScreenCrop};
+use crate::crop::CropFilter;
 use crate::settings::{CAPTURE_FPS, HLS_LIST_SIZE, HLS_SEGMENT_DURATION};
 use crate::util;
 use egui::ColorImage;
 use image::{load_from_memory_with_format, RgbImage};
 use regex::Regex;
 use std::collections::HashMap;
-use std::io::{self, Read, Write};
+use std::io::{self, Write};
 use std::path::Path;
-use std::process::{Child, ChildStdin, Command, Stdio};
+use std::process::{Child, Command, Stdio};
 
 fn list_screen_capture_devices_macos() -> io::Result<HashMap<String, String>> {
     let output = Command::new("ffmpeg")
@@ -208,7 +208,7 @@ pub fn ffmpeg_is_installed() -> bool {
 }
 
 pub fn take_screenshot(source: &str) -> ColorImage {
-    let downsample_factor = "10";
+    // let downsample_factor = "10";
     if cfg!(target_os = "macos") {
         let o = Command::new("ffmpeg")
             .args([

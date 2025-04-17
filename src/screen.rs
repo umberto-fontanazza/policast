@@ -1,9 +1,6 @@
-use egui::{ColorImage, Rect};
+use egui::ColorImage;
 
-use crate::{
-    crop::RelativeScreenCrop,
-    ffmpeg::{list_screen_capture_devices, take_screenshot},
-};
+use crate::ffmpeg::{list_screen_capture_devices, take_screenshot};
 
 #[derive(Clone)]
 pub struct Screen {

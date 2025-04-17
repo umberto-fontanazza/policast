@@ -1,7 +1,4 @@
-use std::{
-    path::{Path, PathBuf},
-    time::Instant,
-};
+use std::{path::PathBuf, time::Instant};
 
 use crate::{alias::Frame, decoder::Decoder, settings::CAPTURE_PERIOD, util};
 use eframe::egui;
