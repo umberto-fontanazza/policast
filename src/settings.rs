@@ -8,6 +8,8 @@ pub const CAPTURE_PERIOD: Duration = Duration::from_millis(1000 / CAPTURE_FPS as
 pub const SERVER_PORT: u16 = 3000;
 /** Duration in seconds of a single HLS segment */
 pub const HLS_SEGMENT_DURATION: usize = 2;
+/** Number of segments available at max at any time */
+pub const HLS_LIST_SIZE: usize = 4;
 
 // playback settings
 pub const DECODER_WIDTH: usize = 1280;
