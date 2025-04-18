@@ -3,6 +3,7 @@ mod caster_settings;
 mod player_controls;
 mod select_role;
 use crate::capturer::Capturer;
+use crate::hotkey::HotkeyManager;
 use crate::playback::Playback;
 use crate::server::Server;
 use crate::settings::Settings;
@@ -23,6 +24,7 @@ enum Route {
 
 pub struct Gui {
     settings: Rc<RefCell<Settings>>,
+    hotkey: HotkeyManager,
     thumbnail_textures: Option<Vec<TextureHandle>>, //used to preview the capture devices
     preview_texture: Option<TextureHandle>,
     _route: Route, // don't set this, use self.route_to() instead. This is used to reuse calculations between renders.
@@ -40,6 +42,7 @@ impl Gui {
         let settings_clone = settings.clone();
         Self {
             settings,
+            hotkey: HotkeyManager::default(),
             thumbnail_textures: None,
             preview_texture: None,
             capturer: Capturer::new(settings_clone),
@@ -62,6 +65,7 @@ impl Gui {
 impl eframe::App for Gui {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         let rendered_route = self._route;
+        self.hotkey.check_keyboard(ctx);
         egui::CentralPanel::default().show(ctx, |ui: &mut egui::Ui| {
             match self._route {
                 Route::SelectRole => {
