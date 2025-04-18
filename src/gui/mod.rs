@@ -7,8 +7,9 @@ use crate::playback::Playback;
 use crate::server::Server;
 use crate::settings::Settings;
 use eframe;
-use egui::{mutex::RwLock, TextureHandle};
-use std::sync::Arc;
+use egui::TextureHandle;
+use std::cell::RefCell;
+use std::rc::Rc;
 
 #[derive(Default, Clone, Copy, PartialEq)]
 enum Route {
@@ -21,7 +22,7 @@ enum Route {
 }
 
 pub struct Gui {
-    settings: Arc<RwLock<Settings>>,
+    settings: Rc<RefCell<Settings>>,
     thumbnail_textures: Option<Vec<TextureHandle>>, //used to preview the capture devices
     preview_texture: Option<TextureHandle>,
     _route: Route, // don't set this, use self.route_to() instead. This is used to reuse calculations between renders.
@@ -35,7 +36,7 @@ pub struct Gui {
 
 impl Gui {
     pub fn new(cc: &eframe::CreationContext<'_>) -> Self {
-        let settings = Arc::new(RwLock::new(Settings::default()));
+        let settings = Rc::new(RefCell::new(Settings::default()));
         let settings_clone = settings.clone();
         Self {
             settings,

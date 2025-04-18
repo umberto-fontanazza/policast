@@ -21,7 +21,7 @@ impl Gui {
                 self.playback.set_video_link(self.video_link.clone());
                 let save_path = self
                     .settings
-                    .read()
+                    .borrow()
                     .player_save_dir
                     .as_ref()
                     .map(|path| path.clone());

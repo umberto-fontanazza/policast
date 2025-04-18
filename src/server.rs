@@ -1,28 +1,27 @@
 use crate::settings::SERVER_PORT;
 use axum::Router;
-use egui::mutex::RwLock;
+use std::path::PathBuf;
 use std::sync::Arc;
 use std::thread::spawn;
+use std::thread::JoinHandle;
 use tokio::sync::Notify;
 use tower_http::services::ServeDir;
-
-use crate::settings::Settings;
 
 /**
  * The purpose of this module is to serve the folder where the HLS stream is saved.
  */
 
 pub struct Server {
-    handle: Option<std::thread::JoinHandle<()>>,
+    handle: Option<JoinHandle<()>>,
     notify: Arc<Notify>,
 }
 
 impl Server {
-    pub fn new(settings: Arc<RwLock<Settings>>) -> Self {
+    pub fn new(serve_path: PathBuf) -> Self {
         let notify = Arc::new(Notify::new());
         let notify_clone = notify.clone();
         Self {
-            handle: Some(spawn(move || server_main(settings, notify_clone))),
+            handle: Some(spawn(move || server_main(serve_path, notify_clone))),
             notify,
         }
     }
@@ -36,8 +35,7 @@ impl Drop for Server {
 }
 
 #[tokio::main]
-async fn server_main(settings: Arc<RwLock<Settings>>, notify: Arc<Notify>) {
-    let path = settings.read().get_save_dir();
+async fn server_main(path: PathBuf, notify: Arc<Notify>) {
     let app = Router::new().nest_service("/hls", ServeDir::new(path));
 
     // 0.0.0.0 is the global IPv4 address
