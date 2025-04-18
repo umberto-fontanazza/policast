@@ -1,3 +1,4 @@
+use crate::settings::SERVER_PORT;
 use axum::Router;
 use egui::mutex::RwLock;
 use std::sync::Arc;
@@ -40,7 +41,9 @@ async fn server_main(settings: Arc<RwLock<Settings>>, notify: Arc<Notify>) {
     let app = Router::new().nest_service("/hls", ServeDir::new(path));
 
     // 0.0.0.0 is the global IPv4 address
-    let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
+    let listener = tokio::net::TcpListener::bind(format!("0.0.0.0:{SERVER_PORT}"))
+        .await
+        .unwrap();
     axum::serve(listener, app)
         .with_graceful_shutdown(shutdown_signal(notify))
         .await
