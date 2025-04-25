@@ -1,5 +1,6 @@
 mod caster_controls;
 mod caster_settings;
+mod hotkey_actions;
 mod player_controls;
 mod select_role;
 use crate::capturer::Capturer;
@@ -65,7 +66,7 @@ impl Gui {
 impl eframe::App for Gui {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         let rendered_route = self._route;
-        self.hotkey.check_keyboard(ctx);
+        self.check_keyboard(ctx);
         egui::CentralPanel::default().show(ctx, |ui: &mut egui::Ui| {
             match self._route {
                 Route::SelectRole => {

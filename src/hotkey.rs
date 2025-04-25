@@ -1,45 +1,41 @@
 use egui::{Context, Event, Key, Modifiers};
 use std::collections::HashMap;
 
+#[derive(Clone, Copy)]
+pub enum HotkeyAction {
+    StopPlayback,
+    PlayPlayback,
+    PrintHello,
+}
+
 pub struct HotkeyManager {
-    bindings: HashMap<(Modifiers, Key), fn()>,
+    bindings: HashMap<(Modifiers, Key), HotkeyAction>,
 }
 
 impl Default for HotkeyManager {
     fn default() -> Self {
         let mut bindings = HashMap::new();
-        bindings.insert(
-            (Modifiers::CTRL, Key::P),
-            (|| {
-                println!("CTRL + P was pressed");
-            }) as fn(),
-        );
+        bindings.insert((Modifiers::CTRL, Key::P), HotkeyAction::PrintHello);
         Self { bindings }
     }
 }
 
 impl HotkeyManager {
-    pub fn check_keyboard(&self, ctx: &Context) {
+    pub fn check_keyboard(&self, ctx: &Context) -> Vec<HotkeyAction> {
         ctx.input(|i| {
-            i.events.iter().for_each(|event| {
-                if let Event::Key {
-                    key,
-                    pressed,
-                    modifiers,
-                    ..
-                    // physical_key,
-                    // repeat,
-                } = event
-                {
-                    if !*pressed {
-                        // TODO: handle multiple presses
-                        return;
-                    }
-                    let query = (modifiers.clone(), key.clone());
-                    let action = self.bindings.get(&query);
-                    action.inspect(|func| func());
-                }
-            });
-        });
+            i.events
+                .iter()
+                .filter_map(|event| match event {
+                    Event::Key {
+                        key,
+                        pressed,
+                        modifiers,
+                        ..
+                    } if *pressed => Some((modifiers.clone(), key.clone())),
+                    _ => None,
+                })
+                .filter_map(|ref search_key| self.bindings.get(search_key).copied())
+                .collect::<Vec<HotkeyAction>>()
+        })
     }
 }
