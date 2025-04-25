@@ -1,5 +1,6 @@
 mod caster_controls;
 mod caster_settings;
+mod hotkey_actions;
 mod player_controls;
 mod select_role;
 use crate::capturer::Capturer;
@@ -10,6 +11,7 @@ use crate::settings::Settings;
 use eframe;
 use egui::TextureHandle;
 use std::cell::RefCell;
+use std::ops::DerefMut;
 use std::rc::Rc;
 
 #[derive(Default, Clone, Copy, PartialEq)]
@@ -65,8 +67,11 @@ impl Gui {
 impl eframe::App for Gui {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         let rendered_route = self._route;
-        self.hotkey.check_keyboard(ctx);
+        let actions = self.hotkey.check_keyboard(ctx);
         egui::CentralPanel::default().show(ctx, |ui: &mut egui::Ui| {
+            actions
+                .iter()
+                .for_each(|rc| rc.borrow_mut().deref_mut()(self, ctx, ui));
             match self._route {
                 Route::SelectRole => {
                     ui.heading("Select your role");

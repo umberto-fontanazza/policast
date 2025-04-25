@@ -1,8 +1,10 @@
-use egui::{Context, Event, Key, Modifiers};
-use std::collections::HashMap;
+use egui::{Context, Event, Key, Modifiers, Ui};
+use std::{cell::RefCell, collections::HashMap, rc::Rc};
+
+use crate::gui::Gui;
 
 pub struct HotkeyManager {
-    bindings: HashMap<(Modifiers, Key), fn()>,
+    bindings: HashMap<(Modifiers, Key), Rc<RefCell<dyn FnMut(&mut Gui, &Context, &Ui) -> ()>>>,
 }
 
 impl Default for HotkeyManager {
@@ -10,36 +12,38 @@ impl Default for HotkeyManager {
         let mut bindings = HashMap::new();
         bindings.insert(
             (Modifiers::CTRL, Key::P),
-            (|| {
-                println!("CTRL + P was pressed");
-            }) as fn(),
+            Rc::new(RefCell::new(|gui: &mut Gui, ctx: &Context, ui: &Ui| {
+                println!("CTRL + P was pressed, stopping playback");
+                gui.action_stop_playback();
+            })) as Rc<RefCell<dyn FnMut(&mut Gui, &Context, &Ui) -> ()>>,
         );
         Self { bindings }
     }
 }
 
 impl HotkeyManager {
-    pub fn check_keyboard(&self, ctx: &Context) {
+    pub fn check_keyboard(
+        &self,
+        ctx: &Context,
+    ) -> Vec<Rc<RefCell<dyn FnMut(&mut Gui, &Context, &Ui) -> ()>>> {
         ctx.input(|i| {
-            i.events.iter().for_each(|event| {
-                if let Event::Key {
-                    key,
-                    pressed,
-                    modifiers,
-                    ..
-                    // physical_key,
-                    // repeat,
-                } = event
-                {
-                    if !*pressed {
-                        // TODO: handle multiple presses
-                        return;
+            i.events
+                .iter()
+                .filter_map(|event| match event {
+                    Event::Key {
+                        key,
+                        pressed,
+                        modifiers,
+                        ..
+                    } if *pressed == true => {
+                        let query = (modifiers.clone(), key.clone());
+                        let a = self.bindings.get(&query);
+                        a.cloned()
                     }
-                    let query = (modifiers.clone(), key.clone());
-                    let action = self.bindings.get(&query);
-                    action.inspect(|func| func());
-                }
-            });
-        });
+                    _ => None,
+                })
+                .map(|rc| rc.clone())
+                .collect::<Vec<Rc<_>>>()
+        })
     }
 }
