@@ -9,6 +9,11 @@ impl Gui {
             ui.horizontal(|ui| {
                 ui.label(format!("{}", action));
                 ui.label(format!("{:?} + {:?}", combo.0, combo.1));
+                if ui.button("Clear binding").clicked() {
+                    self.hotkey
+                        .try_unbind(*action)
+                        .expect("Should unbind the action");
+                }
             });
         });
         self.hotkey.unbound_actions().iter().for_each(|action| {

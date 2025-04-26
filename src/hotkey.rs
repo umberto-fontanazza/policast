@@ -4,7 +4,7 @@ use std::collections::{HashMap, HashSet};
 use strum::IntoEnumIterator;
 use strum_macros::{Display, EnumIter};
 
-#[derive(Clone, Copy, PartialEq, Eq, Hash, EnumIter, Display)]
+#[derive(Clone, Copy, PartialEq, Eq, Hash, EnumIter, Display, Debug)]
 pub enum HotkeyAction {
     StopPlayback,
     PlayPlayback,
@@ -12,6 +12,7 @@ pub enum HotkeyAction {
     BackToRoot,
 }
 
+#[derive(Debug)]
 pub enum BindError {
     KeyComboAlreadyAssigned(HotkeyAction),
     ActionAlreadyAssigned(KeyCombo),
@@ -154,7 +155,7 @@ impl HotkeyManager {
         Ok(())
     }
 
-    fn try_unbind(&mut self, action: HotkeyAction) -> Result<(), BindError> {
+    pub fn try_unbind(&mut self, action: HotkeyAction) -> Result<(), BindError> {
         let opt_key_combo = self
             .reverse_search(action)
             .map(|opt_content| opt_content.clone());
