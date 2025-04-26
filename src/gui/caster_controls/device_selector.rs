@@ -5,6 +5,8 @@ use egui::{Image, TextureHandle, Vec2};
 
 impl Gui {
     pub fn device_selector(&mut self, ui: &mut egui::Ui, ctx: &egui::Context) {
+        ui.heading("Capture device selection");
+
         let devices = self.capturer.get_capture_devices().clone();
         let selected_device = self.capturer.get_selected_device();
 

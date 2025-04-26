@@ -8,6 +8,7 @@ use crate::server::Server;
 
 impl Gui {
     pub fn caster_controls(&mut self, ui: &mut egui::Ui, ctx: &Context) {
+        ui.heading("Caster root");
         if self.first_route_render & self.hls_server.is_none() {
             let serve_path = self.settings.borrow().get_save_dir();
             self.hls_server = Some(Server::new(serve_path));

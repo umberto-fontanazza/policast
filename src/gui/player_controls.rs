@@ -4,6 +4,8 @@ use egui::TextEdit;
 
 impl Gui {
     pub fn player_controls(&mut self, ui: &mut egui::Ui, ctx: &egui::Context) {
+        ui.heading("Player root");
+
         ui.label("Enter the M3U link to play the video:");
 
         // Text field to input the M3U link

@@ -75,25 +75,11 @@ impl eframe::App for Gui {
         self.check_keyboard(ctx);
         egui::CentralPanel::default().show(ctx, |ui: &mut egui::Ui| {
             match self._route {
-                Route::SelectRole => {
-                    ui.heading("Select your role");
-                    self.select_role(ui);
-                }
-                Route::CasterDeviceSelection => {
-                    ui.heading("Capture device selection");
-                    self.device_selector(ui, ctx);
-                }
-                Route::CasterControls => {
-                    ui.heading("Caster root");
-                    self.caster_controls(ui, ctx);
-                }
-                Route::CasterSettings => {
-                    self.caster_settings(ui);
-                }
-                Route::PlayerControls => {
-                    ui.heading("Player root");
-                    self.player_controls(ui, ctx); // Calling the new function here
-                }
+                Route::SelectRole => self.select_role(ui),
+                Route::CasterDeviceSelection => self.device_selector(ui, ctx),
+                Route::CasterControls => self.caster_controls(ui, ctx),
+                Route::CasterSettings => self.caster_settings(ui),
+                Route::PlayerControls => self.player_controls(ui, ctx), // Calling the new function here
             }
         });
         if self._route == rendered_route {
