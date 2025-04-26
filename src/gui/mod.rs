@@ -1,6 +1,7 @@
 mod caster_controls;
 mod caster_settings;
 mod hotkey_actions;
+mod hotkey_settings;
 mod player_controls;
 mod select_role;
 use crate::capturer::Capturer;
@@ -12,6 +13,11 @@ use eframe;
 use egui::TextureHandle;
 use std::cell::RefCell;
 use std::rc::Rc;
+
+pub enum Role {
+    Caster,
+    Player,
+}
 
 #[derive(Default, Clone, Copy, PartialEq)]
 enum Route {
@@ -82,7 +88,6 @@ impl eframe::App for Gui {
                     self.caster_controls(ui, ctx);
                 }
                 Route::CasterSettings => {
-                    ui.heading("Caster settings");
                     self.caster_settings(ui);
                 }
                 Route::PlayerControls => {

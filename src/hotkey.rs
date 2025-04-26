@@ -1,8 +1,9 @@
 use crate::alias::KeyCombo;
 use egui::{Context, Event, Key, Modifiers};
 use std::collections::HashMap;
+use strum_macros::{Display, EnumIter};
 
-#[derive(Clone, Copy, PartialEq)]
+#[derive(Clone, Copy, PartialEq, EnumIter, Display)]
 pub enum HotkeyAction {
     StopPlayback,
     PlayPlayback,
@@ -22,8 +23,9 @@ pub struct HotkeyManager {
 impl Default for HotkeyManager {
     fn default() -> Self {
         let mut bindings = HashMap::new();
-        bindings.insert((Modifiers::CTRL, Key::P), HotkeyAction::PrintHello);
-        bindings.insert((Modifiers::MAC_CMD, Key::P), HotkeyAction::StopPlayback);
+        bindings.insert((Modifiers::MAC_CMD, Key::P), HotkeyAction::PrintHello);
+        bindings.insert((Modifiers::MAC_CMD, Key::S), HotkeyAction::StopPlayback);
+        bindings.insert((Modifiers::NONE, Key::Space), HotkeyAction::PlayPlayback);
         Self { bindings }
     }
 }
