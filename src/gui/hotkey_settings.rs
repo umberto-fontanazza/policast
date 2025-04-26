@@ -16,6 +16,9 @@ impl Gui {
             ui.horizontal(|ui| {
                 ui.label(format!("{}", action));
                 ui.label(format!("Unbinded"));
+                if ui.button("Click to bind").clicked() {
+                    self.hotkey.new_binding_mode(*action);
+                }
             });
         });
     }

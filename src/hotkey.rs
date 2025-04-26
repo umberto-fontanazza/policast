@@ -18,8 +18,13 @@ pub enum BindError {
     ActionAlreadyUnbinded,
 }
 
+enum ManagerState {
+    Default,
+    Binding(HotkeyAction),
+}
+
 pub struct HotkeyManager {
-    pub enabled: bool,
+    state: ManagerState,
     bindings: HashMap<KeyCombo, HotkeyAction>,
 }
 
@@ -31,16 +36,46 @@ impl Default for HotkeyManager {
         bindings.insert((Modifiers::NONE, Key::Space), HotkeyAction::PlayPlayback);
         Self {
             bindings,
-            enabled: true,
+            state: ManagerState::Default,
         }
     }
 }
 
 impl HotkeyManager {
-    pub fn check_keyboard(&self, ctx: &Context) -> Vec<HotkeyAction> {
-        if !self.enabled {
-            return vec![];
+    pub fn new_binding_mode(&mut self, action: HotkeyAction) {
+        self.state = ManagerState::Binding(action);
+    }
+
+    pub fn check_keyboard(&mut self, ctx: &Context) -> Vec<HotkeyAction> {
+        match self.state {
+            ManagerState::Default => self.default_behavior(ctx),
+            ManagerState::Binding(action) => self.new_binding(ctx, action),
         }
+    }
+
+    fn new_binding(&mut self, ctx: &Context, action: HotkeyAction) -> Vec<HotkeyAction> {
+        let opt_key_combo = ctx.input(|i| {
+            i.events
+                .iter()
+                .filter_map(|event| match event {
+                    Event::Key {
+                        key,
+                        pressed,
+                        repeat,
+                        modifiers,
+                        ..
+                    } if *pressed && !*repeat => Some((modifiers.clone(), key.clone())),
+                    _ => None,
+                })
+                .next()
+        });
+        if let Some(key_combo) = opt_key_combo {
+            let _ = self.try_bind(key_combo, action); //TODO: handle error
+        }
+        vec![]
+    }
+
+    fn default_behavior(&self, ctx: &Context) -> Vec<HotkeyAction> {
         ctx.input(|i| {
             i.events
                 .iter()
@@ -84,7 +119,7 @@ impl HotkeyManager {
             .next()
     }
 
-    pub fn try_bind(&mut self, combo: KeyCombo, action: HotkeyAction) -> Result<(), BindError> {
+    fn try_bind(&mut self, combo: KeyCombo, action: HotkeyAction) -> Result<(), BindError> {
         match self.bindings.get(&combo) {
             Some(action) => return Err(BindError::KeyComboAlreadyAssigned(*action)),
             None => (),
@@ -97,7 +132,7 @@ impl HotkeyManager {
         Ok(())
     }
 
-    pub fn try_unbind(&mut self, action: HotkeyAction) -> Result<(), BindError> {
+    fn try_unbind(&mut self, action: HotkeyAction) -> Result<(), BindError> {
         let opt_key_combo = self
             .reverse_search(action)
             .map(|opt_content| opt_content.clone());
