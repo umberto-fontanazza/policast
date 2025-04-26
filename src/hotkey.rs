@@ -26,6 +26,8 @@ enum ManagerState {
 pub struct HotkeyManager {
     state: ManagerState,
     bindings: HashMap<KeyCombo, HotkeyAction>,
+    reverse_bindings_cache: Option<Vec<(HotkeyAction, KeyCombo)>>,
+    unbound_actions_cache: Option<Vec<HotkeyAction>>,
 }
 
 impl Default for HotkeyManager {
@@ -37,6 +39,8 @@ impl Default for HotkeyManager {
         Self {
             bindings,
             state: ManagerState::Default,
+            reverse_bindings_cache: None,
+            unbound_actions_cache: None,
         }
     }
 }
@@ -93,22 +97,38 @@ impl HotkeyManager {
         })
     }
 
-    pub fn bindings(&self) -> HashMap<HotkeyAction, KeyCombo> {
-        self.bindings
-            .iter()
-            .map(|(k, v)| (v.clone(), k.clone()))
-            .collect::<HashMap<HotkeyAction, KeyCombo>>()
+    pub fn bindings(&mut self) -> Vec<(HotkeyAction, KeyCombo)> {
+        match &mut self.reverse_bindings_cache {
+            Some(cache) => cache.clone(),
+            None => {
+                let reverse_bindings = self
+                    .bindings
+                    .iter()
+                    .map(|(k, v)| (v.clone(), k.clone()))
+                    .collect::<Vec<_>>();
+                self.reverse_bindings_cache = Some(reverse_bindings.clone());
+                reverse_bindings
+            }
+        }
     }
 
-    pub fn unbinded_actions(&self) -> HashSet<HotkeyAction> {
-        let mut all_actions = HotkeyAction::iter().collect::<HashSet<_>>();
-        self.bindings
-            .iter()
-            .map(|(_, action)| action.clone())
-            .for_each(|action| {
-                all_actions.remove(&action);
-            });
-        all_actions
+    pub fn unbound_actions(&mut self) -> Vec<HotkeyAction> {
+        if self.unbound_actions_cache.is_none() {
+            let bound_actions = self
+                .bindings
+                .iter()
+                .map(|(_, action)| action.clone())
+                .collect::<HashSet<HotkeyAction>>();
+            let unbound_actions = HotkeyAction::iter()
+                .collect::<HashSet<HotkeyAction>>()
+                .difference(&bound_actions)
+                .collect::<Vec<&HotkeyAction>>()
+                .into_iter()
+                .map(|reference| reference.clone())
+                .collect::<Vec<_>>();
+            self.unbound_actions_cache = Some(unbound_actions);
+        }
+        self.unbound_actions_cache.clone().unwrap()
     }
 
     fn reverse_search(&self, action: HotkeyAction) -> Option<&KeyCombo> {
@@ -128,6 +148,8 @@ impl HotkeyManager {
             Some(key_combo) => return Err(BindError::ActionAlreadyAssigned(*key_combo)),
             None => (),
         };
+        self.reverse_bindings_cache = None;
+        self.unbound_actions_cache = None;
         self.bindings.insert(combo, action);
         Ok(())
     }
@@ -138,6 +160,8 @@ impl HotkeyManager {
             .map(|opt_content| opt_content.clone());
         match opt_key_combo {
             Some(combo) => {
+                self.reverse_bindings_cache = None;
+                self.unbound_actions_cache = None;
                 self.bindings.remove(&combo);
             }
             None => return Err(BindError::ActionAlreadyUnbinded),
