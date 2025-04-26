@@ -1,16 +1,21 @@
 use egui::Ui;
-use strum::IntoEnumIterator;
 
 use super::{Gui, Role};
-use crate::hotkey::HotkeyAction;
 
 impl Gui {
     pub fn hotkey_settings(&mut self, ui: &mut Ui, _role: Role) {
         ui.label("Hotkey settings");
-        HotkeyAction::iter().for_each(|variant| {
+        //FIXME: deterministic ordering of tuples
+        self.hotkey.bindings().iter().for_each(|(action, combo)| {
             ui.horizontal(|ui| {
-                ui.label(format!("{}", variant));
-                ui.label("Change me button");
+                ui.label(format!("{}", action));
+                ui.label(format!("{:?} + {:?}", combo.0, combo.1));
+            });
+        });
+        self.hotkey.unbinded_actions().iter().for_each(|action| {
+            ui.horizontal(|ui| {
+                ui.label(format!("{}", action));
+                ui.label(format!("Unbinded"));
             });
         });
     }

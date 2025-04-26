@@ -1,13 +1,15 @@
 use crate::alias::KeyCombo;
 use egui::{Context, Event, Key, Modifiers};
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
+use strum::IntoEnumIterator;
 use strum_macros::{Display, EnumIter};
 
-#[derive(Clone, Copy, PartialEq, EnumIter, Display)]
+#[derive(Clone, Copy, PartialEq, Eq, Hash, EnumIter, Display)]
 pub enum HotkeyAction {
     StopPlayback,
     PlayPlayback,
     PrintHello,
+    BackToRoot,
 }
 
 pub enum BindError {
@@ -17,6 +19,7 @@ pub enum BindError {
 }
 
 pub struct HotkeyManager {
+    pub enabled: bool,
     bindings: HashMap<KeyCombo, HotkeyAction>,
 }
 
@@ -26,12 +29,18 @@ impl Default for HotkeyManager {
         bindings.insert((Modifiers::MAC_CMD, Key::P), HotkeyAction::PrintHello);
         bindings.insert((Modifiers::MAC_CMD, Key::S), HotkeyAction::StopPlayback);
         bindings.insert((Modifiers::NONE, Key::Space), HotkeyAction::PlayPlayback);
-        Self { bindings }
+        Self {
+            bindings,
+            enabled: true,
+        }
     }
 }
 
 impl HotkeyManager {
     pub fn check_keyboard(&self, ctx: &Context) -> Vec<HotkeyAction> {
+        if !self.enabled {
+            return vec![];
+        }
         ctx.input(|i| {
             i.events
                 .iter()
@@ -47,6 +56,24 @@ impl HotkeyManager {
                 .filter_map(|ref search_key| self.bindings.get(search_key).copied())
                 .collect::<Vec<HotkeyAction>>()
         })
+    }
+
+    pub fn bindings(&self) -> HashMap<HotkeyAction, KeyCombo> {
+        self.bindings
+            .iter()
+            .map(|(k, v)| (v.clone(), k.clone()))
+            .collect::<HashMap<HotkeyAction, KeyCombo>>()
+    }
+
+    pub fn unbinded_actions(&self) -> HashSet<HotkeyAction> {
+        let mut all_actions = HotkeyAction::iter().collect::<HashSet<_>>();
+        self.bindings
+            .iter()
+            .map(|(_, action)| action.clone())
+            .for_each(|action| {
+                all_actions.remove(&action);
+            });
+        all_actions
     }
 
     fn reverse_search(&self, action: HotkeyAction) -> Option<&KeyCombo> {
