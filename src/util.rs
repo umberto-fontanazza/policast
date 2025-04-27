@@ -1,6 +1,6 @@
 use std::{io::Read, process::ChildStdout};
 
-use egui::{ColorImage, TextureHandle};
+use egui::{ColorImage, Modifiers, TextureHandle};
 use image::ImageBuffer;
 
 use crate::alias::Frame;
@@ -32,4 +32,18 @@ pub fn read_while_full(stdout: &mut ChildStdout, buffer: &mut [u8]) {
             Err(_) => panic!("Failed to read from subprocess stdout"),
         }
     }
+}
+
+pub fn modifiers_to_string(modifiers: &Modifiers) -> String {
+    vec![
+        (String::from("ALT"), modifiers.alt),
+        (String::from("CTRL"), modifiers.ctrl),
+        (String::from("SHIFT"), modifiers.shift),
+        (String::from("CMD"), modifiers.mac_cmd),
+    ]
+    .into_iter()
+    .filter(|(_, flag)| *flag)
+    .map(|(str, _)| str)
+    .collect::<Vec<String>>()
+    .join(" + ")
 }
