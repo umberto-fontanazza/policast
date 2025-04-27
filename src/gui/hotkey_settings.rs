@@ -1,6 +1,6 @@
 use egui::Ui;
 
-use crate::hotkey::{HotkeyAction, ManagerState};
+use crate::hotkey::ManagerState;
 
 use super::{Gui, Role};
 
