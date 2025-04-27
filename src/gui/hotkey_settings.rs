@@ -1,5 +1,7 @@
 use egui::Ui;
 
+use crate::hotkey::{HotkeyAction, ManagerState};
+
 use super::{Gui, Role};
 
 impl Gui {
@@ -16,12 +18,20 @@ impl Gui {
                 }
             });
         });
-        self.hotkey.unbound_actions().iter().for_each(|action| {
+        let unbound_actions = self.hotkey.unbound_actions();
+        unbound_actions.iter().for_each(|action| {
             ui.horizontal(|ui| {
                 ui.label(format!("{}", action));
-                ui.label(format!("Unbinded"));
-                if ui.button("Click to bind").clicked() {
-                    self.hotkey.new_binding_mode(*action);
+                match self.hotkey.state {
+                    ManagerState::Binding(hotkey_action) if hotkey_action == *action => {
+                        ui.label("Press key combination to bind");
+                    }
+                    _ => {
+                        ui.label(format!("unbound"));
+                        if ui.button("Click to bind").clicked() {
+                            self.hotkey.new_binding_mode(*action);
+                        }
+                    }
                 }
             });
         });

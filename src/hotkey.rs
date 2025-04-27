@@ -19,13 +19,13 @@ pub enum BindError {
     ActionAlreadyUnbinded,
 }
 
-enum ManagerState {
+pub enum ManagerState {
     Default,
     Binding(HotkeyAction),
 }
 
 pub struct HotkeyManager {
-    state: ManagerState,
+    pub state: ManagerState,
     bindings: HashMap<KeyCombo, HotkeyAction>,
     reverse_bindings_cache: Option<Vec<(HotkeyAction, KeyCombo)>>,
     unbound_actions_cache: Option<Vec<HotkeyAction>>,
