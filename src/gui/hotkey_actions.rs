@@ -9,7 +9,7 @@ impl Gui {
             crate::hotkey::HotkeyAction::StopPlayback => self._action_stop_playback(),
             crate::hotkey::HotkeyAction::PlayPlayback => self._action_play_playback(),
             crate::hotkey::HotkeyAction::BackToRoot => self._action_route_to_root(),
-            crate::hotkey::HotkeyAction::RouteBack => self.route_back(),
+            crate::hotkey::HotkeyAction::RouteBack => self._action_route_back(),
             _ => (),
         });
     }
@@ -24,5 +24,9 @@ impl Gui {
 
     fn _action_route_to_root(&mut self) {
         return self.route_to(Route::SelectRole);
+    }
+
+    fn _action_route_back(&mut self) {
+        return self.route_back();
     }
 }
