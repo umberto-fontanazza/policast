@@ -8,7 +8,6 @@ impl Gui {
         ui.heading("Capture device selection");
 
         let devices = self.capturer.get_capture_devices().clone();
-        let selected_device = self.capturer.get_selected_device();
 
         if self.first_route_render & self.thumbnail_textures.is_none() {
             let textures = devices
@@ -33,9 +32,10 @@ impl Gui {
                     .iter()
                     .find(|t| t.name().eq(format!("device-{}", device.handle()).as_str()))
                     .expect(format!("Texture with hanlde {} not found", device.handle()).as_str());
-                let selected = selected_device
-                    .as_ref()
-                    .is_some_and(|d1| d1.eq(&device.handle()));
+                let selected = self
+                    .capturer
+                    .get_selected_device()
+                    .is_some_and(|opt_val| opt_val.handle() == device.handle());
                 //TODO: fit to relative size?
                 let img_button = egui::ImageButton::new(
                     Image::new(t).fit_to_exact_size(Vec2::new(320.0, 180.0)),

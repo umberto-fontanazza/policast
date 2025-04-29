@@ -73,8 +73,13 @@ impl Capturer {
         let _ = stopper.send(() as StopSignal); //TODO: handle error
     }
 
-    pub fn get_selected_device(&self) -> Option<String> {
-        self.selected_device.clone()
+    pub fn get_selected_device(&mut self) -> Option<&mut Screen> {
+        self.selected_device.as_mut().map(|selected_device_handle| {
+            self.capture_devices
+                .iter_mut()
+                .find(|screen| screen.handle() == *selected_device_handle)
+                .expect("Inconsistent state on capturer, self.selected_device is set but the respective device handle was not found among the devices")
+        })
     }
 
     pub fn set_selected_device(&mut self, device: Option<String>) -> io::Result<()> {
