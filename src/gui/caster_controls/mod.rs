@@ -1,7 +1,7 @@
 mod area_selector;
 mod device_selector;
 mod preview;
-use egui::Context;
+use egui::{Button, Context};
 
 use super::{Gui, Route};
 use crate::server::Server;
@@ -28,7 +28,17 @@ impl Gui {
 
         let preview_rectangle = self.preview(ui, ctx);
 
-        if ui.button("Start Area Selection").clicked() {
+        if ui
+            .add_enabled(
+                !self.capturer.selecting_area,
+                Button::new(if !self.capturer.selecting_area {
+                    "Start Area Selection"
+                } else {
+                    "Click and drag"
+                }),
+            )
+            .clicked()
+        {
             self.capturer.selecting_area = true;
             self.capturer.start_point = None;
             self.capturer.end_point = None;
