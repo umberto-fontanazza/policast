@@ -6,9 +6,13 @@ use strum_macros::{Display, EnumIter};
 
 #[derive(Clone, Copy, PartialEq, Eq, Hash, EnumIter, Display, Debug)]
 pub enum HotkeyAction {
+    // Caster actions
+    OpenSettings,
+    SelectArea,
+    // Player actions
     StopPlayback,
     PlayPlayback,
-    PrintHello,
+    // Common
     BackToRoot,
 }
 
@@ -34,7 +38,6 @@ pub struct HotkeyManager {
 impl Default for HotkeyManager {
     fn default() -> Self {
         let mut bindings = HashMap::new();
-        bindings.insert((Modifiers::MAC_CMD, Key::P), HotkeyAction::PrintHello);
         bindings.insert((Modifiers::MAC_CMD, Key::S), HotkeyAction::StopPlayback);
         bindings.insert((Modifiers::NONE, Key::Space), HotkeyAction::PlayPlayback);
         Self {

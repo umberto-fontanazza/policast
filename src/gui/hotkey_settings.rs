@@ -1,7 +1,6 @@
-use egui::Ui;
-
 use crate::hotkey::ManagerState;
 use crate::util::modifiers_to_string;
+use egui::Ui;
 
 use super::{Gui, Role};
 
@@ -14,7 +13,12 @@ impl Gui {
             .for_each(|(action, (modifiers, key))| {
                 ui.horizontal(|ui| {
                     ui.label(format!("{}", action));
-                    ui.label(format!("{} + {:?}", modifiers_to_string(modifiers), key));
+                    let mut key_combo = Vec::<String>::new();
+                    if !modifiers.is_none() {
+                        key_combo.push(modifiers_to_string(modifiers));
+                    }
+                    key_combo.push(format!("{:?}", key));
+                    ui.label(key_combo.join(" + "));
                     if ui.button("Clear binding").clicked() {
                         self.hotkey
                             .try_unbind(*action)

@@ -9,9 +9,7 @@ impl Gui {
             crate::hotkey::HotkeyAction::StopPlayback => self._action_stop_playback(),
             crate::hotkey::HotkeyAction::PlayPlayback => self._action_play_playback(),
             crate::hotkey::HotkeyAction::BackToRoot => self._action_route_to_root(),
-            crate::hotkey::HotkeyAction::PrintHello => {
-                println!("Hello there")
-            }
+            _ => (),
         });
     }
 

@@ -14,10 +14,12 @@ impl Gui {
         });
 
         ui.label("Edit save location: ");
-        ui.add(egui::TextEdit::singleline(&mut self.text_buffer));
-        if ui.button("Apply changes").clicked() {
-            self.settings.borrow_mut().set_save_dir(&self.text_buffer);
-        }
+        ui.horizontal(|ui| {
+            ui.add(egui::TextEdit::singleline(&mut self.text_buffer));
+            if ui.button("Apply changes").clicked() {
+                self.settings.borrow_mut().set_save_dir(&self.text_buffer);
+            }
+        });
         self.hotkey_settings(ui, Role::Caster);
     }
 }
