@@ -15,7 +15,7 @@ impl Gui {
         }
 
         if ui.button("Go to settings").clicked() {
-            return self.route_to(Route::CasterSettings);
+            return self.route_to(Route::Settings);
         }
 
         if ui.button("Back to device selection").clicked() {

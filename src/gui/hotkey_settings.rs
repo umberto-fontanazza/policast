@@ -2,10 +2,10 @@ use crate::hotkey::ManagerState;
 use crate::util::modifiers_to_string;
 use egui::Ui;
 
-use super::{Gui, Role};
+use super::Gui;
 
 impl Gui {
-    pub fn hotkey_settings(&mut self, ui: &mut Ui, _role: Role) {
+    pub fn hotkey_settings(&mut self, ui: &mut Ui) {
         ui.label("Hotkey settings");
         self.hotkey
             .bindings()

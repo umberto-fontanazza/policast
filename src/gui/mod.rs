@@ -1,9 +1,9 @@
 mod caster_controls;
-mod caster_settings;
 mod hotkey_actions;
 mod hotkey_settings;
 mod player_controls;
 mod select_role;
+mod settings;
 use crate::capturer::Capturer;
 use crate::hotkey::HotkeyManager;
 use crate::playback::Playback;
@@ -14,6 +14,7 @@ use egui::TextureHandle;
 use std::cell::RefCell;
 use std::rc::Rc;
 
+#[derive(PartialEq)]
 pub enum Role {
     Caster,
     Player,
@@ -25,16 +26,18 @@ enum Route {
     SelectRole,
     CasterDeviceSelection,
     CasterControls,
-    CasterSettings,
+    Settings,
     PlayerControls,
 }
 
 pub struct Gui {
+    role: Option<Role>,
     settings: Rc<RefCell<Settings>>,
     hotkey: HotkeyManager,
     thumbnail_textures: Option<Vec<TextureHandle>>, //used to preview the capture devices
     preview_texture: Option<TextureHandle>,
     _route: Route, // don't set this, use self.route_to() instead. This is used to reuse calculations between renders.
+    _previous_route: Route,
     first_route_render: bool, // to avoid repeated calculation for each render
     video_link: String,
     playback: Playback,
@@ -48,12 +51,14 @@ impl Gui {
         let settings = Rc::new(RefCell::new(Settings::default()));
         let settings_clone = settings.clone();
         Self {
+            role: None,
             settings,
             hotkey: HotkeyManager::default(),
             thumbnail_textures: None,
             preview_texture: None,
             capturer: Capturer::new(settings_clone),
             _route: Route::default(),
+            _previous_route: Route::default(),
             first_route_render: true,
             video_link: "".to_string(),
             playback: Playback::new(&cc.egui_ctx),
@@ -65,7 +70,19 @@ impl Gui {
     /** Remember to return right after using this function to stop the rendering of the old route */
     fn route_to(&mut self, destination: Route) {
         self.first_route_render = true;
+        self._previous_route = self._route;
         self._route = destination;
+        match destination {
+            Route::SelectRole => self.role = None,
+            Route::CasterControls => self.role = Some(Role::Caster),
+            Route::PlayerControls => self.role = Some(Role::Player),
+            _ => (),
+        }
+    }
+
+    /** Remember to return right after using this function to stop the rendering of the old route */
+    pub fn route_back(&mut self) {
+        return self.route_to(self._previous_route);
     }
 }
 
@@ -78,7 +95,7 @@ impl eframe::App for Gui {
                 Route::SelectRole => self.select_role(ui),
                 Route::CasterDeviceSelection => self.device_selector(ui, ctx),
                 Route::CasterControls => self.caster_controls(ui, ctx),
-                Route::CasterSettings => self.caster_settings(ui),
+                Route::Settings => self.settings(ui),
                 Route::PlayerControls => self.player_controls(ui, ctx), // Calling the new function here
             }
         });

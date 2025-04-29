@@ -1,10 +1,15 @@
-use super::Gui;
+use super::{Gui, Route};
 use crate::playback::PlaybackStatus;
 use egui::TextEdit;
 
 impl Gui {
     pub fn player_controls(&mut self, ui: &mut egui::Ui, ctx: &egui::Context) {
-        ui.heading("Player root");
+        ui.horizontal(|ui| {
+            ui.heading("Player root");
+            if ui.button("Settings").clicked() {
+                self.route_to(Route::Settings);
+            }
+        });
 
         ui.label("Enter the M3U link to play the video:");
 
