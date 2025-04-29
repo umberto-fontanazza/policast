@@ -1,12 +1,16 @@
 use egui::ColorImage;
 
-use crate::ffmpeg::{list_screen_capture_devices, take_screenshot};
+use crate::{
+    crop::RelativeScreenCrop,
+    ffmpeg::{list_screen_capture_devices, take_screenshot},
+};
 
 #[derive(Clone)]
 pub struct Screen {
     handle: String,
     name: String,
     sceenshot: Option<ColorImage>,
+    pub selected_area: Option<RelativeScreenCrop>,
 }
 
 impl Screen {
@@ -15,6 +19,7 @@ impl Screen {
             handle: handle.clone(),
             name: name.or(Some(handle)).unwrap(),
             sceenshot: None,
+            selected_area: None,
         }
     }
 

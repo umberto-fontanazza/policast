@@ -18,8 +18,7 @@ pub struct Capturer {
     is_recording: bool,
     helper_handle: Option<(JoinHandle<()>, Receiver<Frame>, Sender<StopSignal>)>,
     settings: Option<Rc<RefCell<Settings>>>,
-    pub selecting_area: bool, // Flag per la selezione dell'area
-    pub selected_area: Option<RelativeScreenCrop>,
+    pub selecting_area: bool,      // Flag per la selezione dell'area
     pub start_point: Option<Pos2>, // Punto iniziale della selezione
     pub end_point: Option<Pos2>,   // Punto finale della selezione
 }
@@ -45,23 +44,17 @@ impl Capturer {
         if !save_dir.is_dir() {
             std::fs::create_dir_all(&save_dir).expect("Should create dir if missing");
         }
-        if let Some(device) = &self.selected_device {
-            let device = self
-                .capture_devices
-                .iter()
-                .find(|screen| screen.handle().eq(device))
-                .expect("Selected device hanlde is inconsistent with available devices");
-            self.is_recording = true;
-            let crop = self.selected_area.clone();
-            let handle = _start_recording(crop, device.clone(), save_dir);
+        if let Some(selected_device) = self.get_selected_device() {
+            let handle = _start_recording(selected_device.clone(), save_dir);
             self.helper_handle = Some(handle);
-            Ok(())
         } else {
-            Err(io::Error::new(
+            return Err(io::Error::new(
                 io::ErrorKind::InvalidInput,
                 "No device selected for recording",
-            ))
+            ));
         }
+        self.is_recording = true;
+        Ok(())
     }
 
     pub fn stop_recording(&mut self) {
@@ -103,7 +96,9 @@ impl Capturer {
     }
 
     pub fn set_selected_area(&mut self, preview_rect: &Rect, crop: &Rect) {
-        self.selected_area = Some(RelativeScreenCrop::new(preview_rect, crop));
+        self.get_selected_device()
+            .expect("Capture device should be selected")
+            .selected_area = Some(RelativeScreenCrop::new(preview_rect, crop));
     }
 
     pub fn is_recording(&self) -> bool {
@@ -117,10 +112,10 @@ impl Capturer {
 }
 
 fn _start_recording(
-    relative_crop: Option<RelativeScreenCrop>,
     device: Screen,
     save_dir: PathBuf,
 ) -> (JoinHandle<()>, Receiver<Frame>, Sender<StopSignal>) {
+    let relative_crop = device.selected_area.clone();
     let mut device = device;
     let height = CAPTURE_HEIGHT;
     let width = device.width() * height / device.height();
