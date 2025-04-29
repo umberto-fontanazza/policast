@@ -40,13 +40,7 @@ impl Gui {
                 )
                 .clicked()
             {
-                self.capturer.selecting_area = true;
-                self.capturer.start_point = None;
-                self.capturer.end_point = None;
-                self.capturer
-                    .get_selected_device()
-                    .expect("Device should be selected")
-                    .selected_area = None;
+                self.capturer.select_area();
             }
 
             let area_is_selected = self

@@ -100,6 +100,15 @@ impl Capturer {
         }
     }
 
+    pub fn select_area(&mut self) {
+        self.selecting_area = true;
+        self.start_point = None;
+        self.end_point = None;
+        self.get_selected_device()
+            .expect("Device should be selected")
+            .selected_area = None;
+    }
+
     pub fn set_selected_area(&mut self, preview_rect: &Rect, crop: &Rect) {
         self.get_selected_device()
             .expect("Capture device should be selected")
