@@ -11,9 +11,7 @@ impl Gui {
             self.preview_texture =
                 Some(ctx.load_texture("preview", ColorImage::default(), Default::default()));
             if !self.capturer.is_recording() {
-                self.capturer
-                    .start_recording()
-                    .expect("Capture should start");
+                self.capturer.start().expect("Capture should start");
             }
         }
 

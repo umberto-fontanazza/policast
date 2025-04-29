@@ -39,7 +39,7 @@ impl Capturer {
         &self.capture_devices
     }
 
-    pub fn start_recording(&mut self) -> io::Result<()> {
+    pub fn start(&mut self) -> io::Result<()> {
         let save_dir = self.settings.as_ref().unwrap().borrow().get_save_dir();
         if !save_dir.is_dir() {
             std::fs::create_dir_all(&save_dir).expect("Should create dir if missing");
@@ -57,13 +57,18 @@ impl Capturer {
         Ok(())
     }
 
-    pub fn stop_recording(&mut self) {
+    pub fn stop(&mut self) {
         if self.helper_handle.is_none() {
             return;
         }
         self.is_recording = false;
         let (_, _, stopper) = self.helper_handle.as_ref().unwrap();
         let _ = stopper.send(() as StopSignal); //TODO: handle error
+    }
+
+    pub fn restart(&mut self) -> io::Result<()> {
+        self.stop();
+        self.start()
     }
 
     pub fn get_selected_device(&mut self) -> Option<&mut Screen> {

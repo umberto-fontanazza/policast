@@ -19,7 +19,7 @@ impl Gui {
         }
 
         if ui.button("Back to device selection").clicked() {
-            self.capturer.stop_recording();
+            self.capturer.stop();
             self.capturer
                 .set_selected_device(None)
                 .expect("Couldn't clear device selection");
@@ -28,25 +28,39 @@ impl Gui {
 
         let preview_rectangle = self.preview(ui, ctx);
 
-        if ui
-            .add_enabled(
-                !self.capturer.selecting_area,
-                Button::new(if !self.capturer.selecting_area {
-                    "Start Area Selection"
-                } else {
-                    "Click and drag"
-                }),
-            )
-            .clicked()
-        {
-            self.capturer.selecting_area = true;
-            self.capturer.start_point = None;
-            self.capturer.end_point = None;
-            self.capturer
+        ui.horizontal(|ui| {
+            if ui
+                .add_enabled(
+                    !self.capturer.selecting_area,
+                    Button::new(if !self.capturer.selecting_area {
+                        "Start Area Selection"
+                    } else {
+                        "Click and drag"
+                    }),
+                )
+                .clicked()
+            {
+                self.capturer.selecting_area = true;
+                self.capturer.start_point = None;
+                self.capturer.end_point = None;
+                self.capturer
+                    .get_selected_device()
+                    .expect("Device should be selected")
+                    .selected_area = None;
+            }
+
+            let area_is_selected = self
+                .capturer
                 .get_selected_device()
                 .expect("Device should be selected")
-                .selected_area = None;
-        }
+                .selected_area
+                .is_some();
+
+            if area_is_selected && ui.button("Clear selected area").clicked() {
+                self.capturer.get_selected_device().unwrap().selected_area = None;
+                self.capturer.restart().unwrap();
+            }
+        });
 
         self.area_selector(ui, &preview_rectangle);
     }

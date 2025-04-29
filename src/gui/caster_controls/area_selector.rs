@@ -32,6 +32,7 @@ impl Gui {
                 let crop = Rect::from_two_pos(start, end);
                 capturer.set_selected_area(preview_rect, &crop);
                 capturer.selecting_area = false;
+                capturer.restart().unwrap();
             }
         }
 
