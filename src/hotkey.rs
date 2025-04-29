@@ -14,6 +14,7 @@ pub enum HotkeyAction {
     PlayPlayback,
     // Common
     BackToRoot,
+    RouteBack,
 }
 
 #[derive(Debug)]
@@ -38,8 +39,12 @@ pub struct HotkeyManager {
 impl Default for HotkeyManager {
     fn default() -> Self {
         let mut bindings = HashMap::new();
-        bindings.insert((Modifiers::MAC_CMD, Key::S), HotkeyAction::StopPlayback);
+        bindings.insert((Modifiers::COMMAND, Key::S), HotkeyAction::StopPlayback);
         bindings.insert((Modifiers::NONE, Key::Space), HotkeyAction::PlayPlayback);
+        bindings.insert(
+            (Modifiers::COMMAND, Key::Backspace),
+            HotkeyAction::RouteBack,
+        );
         Self {
             bindings,
             state: ManagerState::Default,
