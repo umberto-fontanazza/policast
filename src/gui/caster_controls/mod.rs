@@ -19,10 +19,8 @@ impl Gui {
         }
 
         if ui.button("Back to device selection").clicked() {
-            self.capturer.stop();
-            self.capturer
-                .set_selected_device(None)
-                .expect("Couldn't clear device selection");
+            self.route_back();
+
             return self.route_to(Route::CasterDeviceSelection);
         }
 
@@ -57,5 +55,12 @@ impl Gui {
         });
 
         self.area_selector(ui, &preview_rectangle);
+    }
+
+    pub fn caster_controls_dismount(&mut self) {
+        self.capturer.stop();
+        self.capturer
+            .set_selected_device(None)
+            .expect("Couldn't clear device selection");
     }
 }

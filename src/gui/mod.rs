@@ -89,6 +89,10 @@ impl Gui {
 
     /** Remember to return right after using this function to stop the rendering of the old route */
     pub fn route_back(&mut self) {
+        match self._route {
+            Route::CasterControls => self.caster_controls_dismount(),
+            _ => (),
+        };
         match self._previous_routes.pop() {
             Some(route) => self._route(route),
             None => (),
