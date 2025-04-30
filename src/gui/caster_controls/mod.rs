@@ -5,6 +5,8 @@ use egui::{Button, Context};
 
 use super::{Gui, Route};
 use crate::server::Server;
+use crate::settings::SERVER_PORT;
+use local_ip_address::local_ip;
 
 impl Gui {
     pub fn caster_controls(&mut self, ui: &mut egui::Ui, ctx: &Context) {
@@ -25,6 +27,14 @@ impl Gui {
         }
 
         let preview_rectangle = self.preview(ui, ctx);
+        let ip = local_ip().expect("Should get the local IPv6");
+        let url = format!("http://{ip}:{SERVER_PORT}/hls/output.m3u8");
+        ui.horizontal(|ui| {
+            ui.label(&url);
+            if ui.button("Copy to clipboard").clicked() {
+                ui.output_mut(|o| o.copied_text = url);
+            }
+        });
 
         ui.horizontal(|ui| {
             if ui

@@ -1,9 +1,7 @@
 use crate::util;
 
 use super::Gui;
-use crate::settings::SERVER_PORT;
 use egui::{ColorImage, Context, Image, Rect};
-use local_ip_address::local_ip;
 
 impl Gui {
     pub fn preview(&mut self, ui: &mut egui::Ui, ctx: &Context) -> Rect {
@@ -25,9 +23,6 @@ impl Gui {
             util::update_texture(texture, frame);
             ctx.request_repaint();
         }
-        let response = ui.add(Image::new(&(*texture)).shrink_to_fit()).rect;
-        let ip = local_ip().expect("Should get the local IPv6");
-        ui.label(format!("http://{ip}:{SERVER_PORT}/hls/output.m3u8"));
-        response
+        ui.add(Image::new(&(*texture)).shrink_to_fit()).rect
     }
 }
