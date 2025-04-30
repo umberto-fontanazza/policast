@@ -109,6 +109,8 @@ fn get_ffmpeg_args(
             "avfoundation",
             "-r",
             &framerate,
+            "-pix_fmt",
+            "0rgb",
             "-i",
             target,
             // "-video_size",
