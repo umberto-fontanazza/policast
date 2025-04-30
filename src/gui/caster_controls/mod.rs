@@ -36,27 +36,23 @@ impl Gui {
             }
         });
 
+        let area_is_selected = self
+            .capturer
+            .get_selected_device()
+            .expect("Device should be selected")
+            .selected_area
+            .is_some();
+        let selecting_area = self.capturer.selecting_area;
+
         ui.horizontal(|ui| {
-            if ui
-                .add_enabled(
-                    !self.capturer.selecting_area,
-                    Button::new(if !self.capturer.selecting_area {
-                        "Start Area Selection"
-                    } else {
-                        "Click and drag"
-                    }),
-                )
-                .clicked()
-            {
+            let btn = Button::new(if !selecting_area {
+                "Start Area Selection"
+            } else {
+                "Click and drag"
+            });
+            if !area_is_selected && ui.add_enabled(!selecting_area, btn).clicked() {
                 self.capturer.select_area();
             }
-
-            let area_is_selected = self
-                .capturer
-                .get_selected_device()
-                .expect("Device should be selected")
-                .selected_area
-                .is_some();
 
             if area_is_selected && ui.button("Clear selected area").clicked() {
                 self.capturer.get_selected_device().unwrap().selected_area = None;
