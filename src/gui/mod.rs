@@ -14,13 +14,15 @@ use egui::TextureHandle;
 use std::cell::RefCell;
 use std::rc::Rc;
 
+const ROUTER_STACK_PREALLOCATED_SIZE: usize = 32;
+
 #[derive(PartialEq)]
 pub enum Role {
     Caster,
     Player,
 }
 
-#[derive(Default, Clone, Copy, PartialEq)]
+#[derive(Default, Clone, Copy, PartialEq, Debug)]
 enum Route {
     #[default]
     SelectRole,
@@ -37,7 +39,7 @@ pub struct Gui {
     thumbnail_textures: Option<Vec<TextureHandle>>, //used to preview the capture devices
     preview_texture: Option<TextureHandle>,
     _route: Route, // don't set this, use self.route_to() instead. This is used to reuse calculations between renders.
-    _previous_route: Route,
+    _previous_routes: Vec<Route>,
     first_route_render: bool, // to avoid repeated calculation for each render
     video_link: String,
     playback: Playback,
@@ -58,7 +60,7 @@ impl Gui {
             preview_texture: None,
             capturer: Capturer::new(settings_clone),
             _route: Route::default(),
-            _previous_route: Route::default(),
+            _previous_routes: Vec::with_capacity(ROUTER_STACK_PREALLOCATED_SIZE),
             first_route_render: true,
             video_link: "".to_string(),
             playback: Playback::new(&cc.egui_ctx),
@@ -67,10 +69,9 @@ impl Gui {
         }
     }
 
-    /** Remember to return right after using this function to stop the rendering of the old route */
-    fn route_to(&mut self, destination: Route) {
+    /** Don't use this function, use route_to or route_back instead */
+    fn _route(&mut self, destination: Route) {
         self.first_route_render = true;
-        self._previous_route = self._route;
         self._route = destination;
         match destination {
             Route::SelectRole => self.role = None,
@@ -81,8 +82,17 @@ impl Gui {
     }
 
     /** Remember to return right after using this function to stop the rendering of the old route */
+    fn route_to(&mut self, destination: Route) {
+        self._previous_routes.push(self._route);
+        self._route(destination);
+    }
+
+    /** Remember to return right after using this function to stop the rendering of the old route */
     pub fn route_back(&mut self) {
-        return self.route_to(self._previous_route);
+        match self._previous_routes.pop() {
+            Some(route) => self._route(route),
+            None => (),
+        };
     }
 }
 
