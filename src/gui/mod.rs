@@ -83,6 +83,9 @@ impl Gui {
 
     /** Remember to return right after using this function to stop the rendering of the old route */
     fn route_to(&mut self, destination: Route) {
+        if self._route == destination {
+            return ();
+        }
         self._previous_routes.push(self._route);
         self._route(destination);
     }
