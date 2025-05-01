@@ -1,3 +1,4 @@
+use directories::UserDirs;
 use std::env;
 use std::path::PathBuf;
 use std::time::Duration;
@@ -37,10 +38,7 @@ impl Default for Settings {
             caster_save_dir: env::current_dir()
                 .expect("Couldn't get the current working directory")
                 .join("capture"),
-            player_save_dir: Some(PathBuf::from(
-                "/Users/umbertofontanazza/Projects/Polito/api-programming/mpsc/save",
-                //TODO: replace with a suitable prod directory
-            )),
+            player_save_dir: Some(UserDirs::new().unwrap().video_dir().unwrap().to_path_buf()),
             player_save_enabled: true,
         }
     }
