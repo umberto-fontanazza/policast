@@ -4,7 +4,7 @@ use std::time::Duration;
 
 pub const CAPTURE_HEIGHT: usize = 1080;
 pub const CAPTURE_FPS: usize = 25;
-pub const CAPTURE_PERIOD: Duration = Duration::from_millis(1000 / CAPTURE_FPS as u64); //TODO: check cast
+pub const CAPTURE_PERIOD: Duration = Duration::from_millis(1000 / CAPTURE_FPS as u64);
 pub const SERVER_PORT: u16 = 3000;
 /** Duration in seconds of a single HLS segment */
 pub const HLS_SEGMENT_DURATION: usize = 2;
