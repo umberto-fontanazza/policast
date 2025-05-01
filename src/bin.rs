@@ -8,5 +8,5 @@ pub fn main() {
         eframe::NativeOptions::default(),
         Box::new(|cc| Ok(Box::new(gui::Gui::new(cc)))),
     )
-    .expect("something wrong");
+    .unwrap();
 }
