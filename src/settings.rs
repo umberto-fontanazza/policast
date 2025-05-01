@@ -16,6 +16,10 @@ pub const HLS_LIST_SIZE: usize = 4;
 pub const DECODER_WIDTH: usize = 1280;
 pub const DECODER_HEIGHT: usize = 720;
 
+pub const APP_QUALIFIER: &str = "com";
+pub const APP_ORGANIZATION: &str = "polito";
+pub const APP_NAME: &str = "PoliCast";
+
 pub struct Settings {
     caster_save_dir: PathBuf, // segment files and playlist manifest are stored here
     pub player_save_dir: Option<PathBuf>,
