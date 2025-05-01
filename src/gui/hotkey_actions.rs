@@ -26,7 +26,7 @@ impl Gui {
         if self._route != Route::PlayerControls {
             return ();
         }
-        self.playback.play(None);
+        self.playback.play();
     }
 
     fn _action_route_to_root(&mut self) {

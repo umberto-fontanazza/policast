@@ -10,6 +10,7 @@ pub struct Save {
 
 impl Save {
     pub fn new(save_dir: PathBuf, width: usize, height: usize) -> Self {
+        //TODO: handle file already exists case
         if !save_dir.is_dir() {
             std::fs::create_dir_all(&save_dir).expect("Should create save dir if missing");
         }

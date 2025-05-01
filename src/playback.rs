@@ -1,6 +1,11 @@
-use std::{path::PathBuf, time::Instant};
+use std::{cell::RefCell, rc::Rc, time::Instant};
 
-use crate::{alias::Frame, decoder::Decoder, settings::CAPTURE_PERIOD, util};
+use crate::{
+    alias::Frame,
+    decoder::Decoder,
+    settings::{Settings, CAPTURE_PERIOD},
+    util,
+};
 use eframe::egui;
 use egui::{ColorImage, TextureHandle, Ui};
 use replace_with::replace_with_or_abort;
@@ -23,10 +28,11 @@ pub struct Playback {
     video_link: Option<String>, // Private variable to store the video link
     texture: Option<TextureHandle>,
     refresh_timestamp: Option<Instant>,
+    settings: Rc<RefCell<Settings>>,
 }
 
 impl Playback {
-    pub fn new(ctx: &egui::Context) -> Self {
+    pub fn new(ctx: &egui::Context, settings: Rc<RefCell<Settings>>) -> Self {
         Self {
             status: Status::Stopped,
             video_link: None,
@@ -36,6 +42,7 @@ impl Playback {
                 Default::default(),
             )),
             refresh_timestamp: None,
+            settings,
         }
     }
 
@@ -51,7 +58,13 @@ impl Playback {
         }
     }
 
-    pub fn play(&mut self, save_path: Option<PathBuf>) {
+    pub fn play(&mut self) {
+        let s = self.settings.borrow();
+        let save_path = if s.player_save_enabled {
+            s.player_save_dir.clone()
+        } else {
+            None
+        };
         replace_with_or_abort(&mut self.status, |status| match status {
             Status::Stopped => Status::Playing(Decoder::new(
                 self.video_link

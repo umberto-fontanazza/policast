@@ -52,6 +52,7 @@ impl Gui {
     pub fn new(cc: &eframe::CreationContext<'_>) -> Self {
         let settings = Rc::new(RefCell::new(Settings::default()));
         let settings_clone = settings.clone();
+        let settings_clone2 = settings.clone();
         Self {
             role: None,
             settings,
@@ -63,7 +64,7 @@ impl Gui {
             _previous_routes: Vec::with_capacity(ROUTER_STACK_PREALLOCATED_SIZE),
             first_route_render: true,
             video_link: "".to_string(),
-            playback: Playback::new(&cc.egui_ctx),
+            playback: Playback::new(&cc.egui_ctx, settings_clone2),
             text_buffer: "Text goes here".to_owned(),
             hls_server: None,
         }

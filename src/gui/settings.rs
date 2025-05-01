@@ -23,5 +23,10 @@ impl Gui {
             });
         }
         self.hotkey_settings(ui);
+
+        ui.checkbox(
+            &mut self.settings.borrow_mut().player_save_enabled,
+            "Save a local copy of the played video",
+        );
     }
 }

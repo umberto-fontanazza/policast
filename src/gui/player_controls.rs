@@ -36,7 +36,7 @@ impl Gui {
                         self.playback.stop();
                     }
                     if ui.button("Resume").clicked() {
-                        self.playback.play(None);
+                        self.playback.play();
                     }
                 }
             };
@@ -47,12 +47,6 @@ impl Gui {
 
     fn _playback_play(&mut self) {
         self.playback.set_video_link(self.video_link.clone());
-        let save_path = self
-            .settings
-            .borrow()
-            .player_save_dir
-            .as_ref()
-            .map(|path| path.clone());
-        self.playback.play(save_path);
+        self.playback.play();
     }
 }
