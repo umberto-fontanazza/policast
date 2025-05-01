@@ -9,9 +9,11 @@ pub struct Save {
 }
 
 impl Save {
-    pub fn new(output_path: PathBuf, width: usize, height: usize) -> Self {
-        //TODO: make sure dir exists
-        let output_file_path = output_path.join(DEFAULT_SAVENAME);
+    pub fn new(save_dir: PathBuf, width: usize, height: usize) -> Self {
+        if !save_dir.is_dir() {
+            std::fs::create_dir_all(&save_dir).expect("Should create save dir if missing");
+        }
+        let output_file_path = save_dir.join(DEFAULT_SAVENAME);
         let subprocess = ffmpeg::spawn_raw_encoder(
             width,
             height,

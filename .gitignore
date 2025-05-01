@@ -18,3 +18,5 @@ Cargo.lock
 
 # stderr drop
 **/*stderr.txt
+
+**/*capture.mp4
