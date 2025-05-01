@@ -1,4 +1,4 @@
-use std::{io::Read, process::ChildStdout};
+use std::{io::Read, path::Path, process::ChildStdout};
 
 use egui::{ColorImage, Modifiers, TextureHandle};
 use image::ImageBuffer;
@@ -46,4 +46,27 @@ pub fn modifiers_to_string(modifiers: &Modifiers) -> String {
     .map(|(str, _)| str)
     .collect::<Vec<String>>()
     .join(" + ")
+}
+
+pub fn fallback_filename(dir_path: &Path, filename: &str, extension: &str) -> String {
+    _fallback_filename(dir_path, filename, extension, 0)
+}
+
+fn _fallback_filename(
+    dir_path: &Path,
+    filename: &str,
+    extension: &str,
+    iteration: usize,
+) -> String {
+    let suffix = if iteration == 0 {
+        "".to_string()
+    } else {
+        format!("_{iteration}")
+    };
+    let file_path = dir_path.join(format!("{filename}{suffix}.{extension}"));
+    if !file_path.is_file() {
+        format!("{filename}{suffix}")
+    } else {
+        _fallback_filename(dir_path, filename, extension, iteration + 1)
+    }
 }
