@@ -50,7 +50,7 @@ pub struct Gui {
 
 impl Gui {
     pub fn new(cc: &eframe::CreationContext<'_>) -> Self {
-        let settings = Rc::new(RefCell::new(Settings::default()));
+        let settings = Rc::new(RefCell::new(Settings::load_or_default()));
         let settings_clone = settings.clone();
         let settings_clone2 = settings.clone();
         Self {

@@ -40,7 +40,7 @@ impl Settings {
         self.caster_save_dir.clone()
     }
 
-    pub fn try_load() -> Result<Self, ()> {
+    fn try_load() -> Result<Self, ()> {
         let dirs = ProjectDirs::from(APP_QUALIFIER, APP_ORGANIZATION, APP_NAME).unwrap();
         let file_path = dirs.config_dir().join("settings.json");
         if !file_path.is_file() {
@@ -62,16 +62,20 @@ impl Settings {
             .write_all(json.as_bytes())
             .expect("Should write settings to file");
     }
+
+    pub fn load_or_default() -> Self {
+        Self::try_load().unwrap_or(Self::default())
+    }
 }
 
 impl Default for Settings {
     fn default() -> Self {
-        Self::try_load().unwrap_or(Self {
+        Self {
             caster_save_dir: env::current_dir()
                 .expect("Couldn't get the current working directory")
                 .join("capture"),
             player_save_dir: Some(UserDirs::new().unwrap().video_dir().unwrap().to_path_buf()),
             player_save_enabled: true,
-        })
+        }
     }
 }
