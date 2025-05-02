@@ -28,5 +28,10 @@ impl Gui {
             &mut self.settings.borrow_mut().player_save_enabled,
             "Save a local copy of the played video",
         );
+
+        //TODO: this must be removed when done
+        if ui.button("Save settings").clicked() {
+            self.settings.borrow().save();
+        }
     }
 }
