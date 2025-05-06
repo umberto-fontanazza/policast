@@ -173,6 +173,7 @@ impl HotkeyManager {
         self.reverse_bindings_cache = None;
         self.unbound_actions_cache = None;
         self.bindings.insert(combo, action);
+        self.save();
         Ok(())
     }
 
@@ -188,6 +189,7 @@ impl HotkeyManager {
             }
             None => return Err(BindError::ActionAlreadyUnbinded),
         }
+        self.save();
         Ok(())
     }
 

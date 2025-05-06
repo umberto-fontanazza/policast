@@ -24,15 +24,14 @@ impl Gui {
         }
         self.hotkey_settings(ui);
 
-        ui.checkbox(
-            &mut self.settings.borrow_mut().player_save_enabled,
-            "Save a local copy of the played video",
-        );
-
-        //TODO: this must be removed when done
-        if ui.button("Save settings").clicked() {
+        if ui
+            .checkbox(
+                &mut self.settings.borrow_mut().player_save_enabled,
+                "Save a local copy of the played video",
+            )
+            .clicked()
+        {
             self.settings.borrow().save();
-            self.hotkey.save();
-        }
+        };
     }
 }
