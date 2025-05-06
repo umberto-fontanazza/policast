@@ -56,7 +56,7 @@ impl Gui {
         Self {
             role: None,
             settings,
-            hotkey: HotkeyManager::default(),
+            hotkey: HotkeyManager::load_or_default(),
             thumbnail_textures: None,
             preview_texture: None,
             capturer: Capturer::new(settings_clone),

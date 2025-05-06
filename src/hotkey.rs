@@ -1,10 +1,21 @@
-use crate::alias::KeyCombo;
+use crate::{
+    alias::KeyCombo,
+    settings::{APP_NAME, APP_ORGANIZATION, APP_QUALIFIER},
+};
+use directories::ProjectDirs;
 use egui::{Context, Event, Key, Modifiers};
 use serde::{Deserialize, Serialize};
+use serde_json::{from_str, to_string_pretty};
 use serde_json_any_key::any_key_map;
-use std::collections::{HashMap, HashSet};
+use std::{
+    collections::{HashMap, HashSet},
+    fs::{create_dir_all, File},
+    io::{Read, Write},
+};
 use strum::IntoEnumIterator;
 use strum_macros::{Display, EnumIter};
+
+const SAVED_CONFIG_FILENAME: &str = "hotkey-bindings.json";
 
 #[derive(Clone, Copy, PartialEq, Eq, Hash, EnumIter, Display, Debug, Serialize, Deserialize)]
 pub enum HotkeyAction {
@@ -178,5 +189,32 @@ impl HotkeyManager {
             None => return Err(BindError::ActionAlreadyUnbinded),
         }
         Ok(())
+    }
+
+    fn try_load() -> Result<Self, ()> {
+        let dirs = ProjectDirs::from(APP_QUALIFIER, APP_ORGANIZATION, APP_NAME).unwrap();
+        let file_path = dirs.config_dir().join(SAVED_CONFIG_FILENAME);
+        if !file_path.is_file() {
+            return Err(());
+        }
+        let mut file = File::open(&file_path).map_err(|_| ())?;
+        let mut file_content = String::new();
+        file.read_to_string(&mut file_content).map_err(|_| ())?;
+        from_str::<HotkeyManager>(&file_content).map_err(|_| ())
+    }
+
+    pub fn save(&self) {
+        let dirs = ProjectDirs::from(APP_QUALIFIER, APP_ORGANIZATION, APP_NAME).unwrap();
+        let config_dir = dirs.config_dir();
+        let json = to_string_pretty(self).expect("Should serialize settings to json");
+        create_dir_all(config_dir).expect("Should make sure the settings save dir exists");
+        File::create(config_dir.join(SAVED_CONFIG_FILENAME))
+            .unwrap()
+            .write_all(json.as_bytes())
+            .expect("Should write settings to file");
+    }
+
+    pub fn load_or_default() -> Self {
+        Self::try_load().unwrap_or(Self::default())
     }
 }

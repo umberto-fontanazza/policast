@@ -32,6 +32,7 @@ impl Gui {
         //TODO: this must be removed when done
         if ui.button("Save settings").clicked() {
             self.settings.borrow().save();
+            self.hotkey.save();
         }
     }
 }
