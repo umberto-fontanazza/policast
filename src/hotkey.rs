@@ -1,10 +1,12 @@
 use crate::alias::KeyCombo;
 use egui::{Context, Event, Key, Modifiers};
+use serde::{Deserialize, Serialize};
+use serde_json_any_key::any_key_map;
 use std::collections::{HashMap, HashSet};
 use strum::IntoEnumIterator;
 use strum_macros::{Display, EnumIter};
 
-#[derive(Clone, Copy, PartialEq, Eq, Hash, EnumIter, Display, Debug)]
+#[derive(Clone, Copy, PartialEq, Eq, Hash, EnumIter, Display, Debug, Serialize, Deserialize)]
 pub enum HotkeyAction {
     // Caster actions
     OpenSettings,
@@ -24,14 +26,16 @@ pub enum BindError {
     ActionAlreadyUnbinded,
 }
 
-#[derive(Display)]
+#[derive(Display, Serialize, Deserialize)]
 pub enum ManagerState {
     Default,
     Binding(HotkeyAction),
 }
 
+#[derive(Serialize, Deserialize)]
 pub struct HotkeyManager {
     pub state: ManagerState,
+    #[serde(with = "any_key_map")]
     bindings: HashMap<KeyCombo, HotkeyAction>,
     reverse_bindings_cache: Option<Vec<(HotkeyAction, KeyCombo)>>,
     unbound_actions_cache: Option<Vec<HotkeyAction>>,
