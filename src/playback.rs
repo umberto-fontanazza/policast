@@ -1,8 +1,9 @@
-use std::{cell::RefCell, rc::Rc, time::Instant};
+use std::{cell::RefCell, net::Ipv4Addr, rc::Rc, time::Instant};
 
 use crate::{
     alias::Frame,
     decoder::Decoder,
+    server::DiscoveryService,
     settings::{Settings, CAPTURE_PERIOD},
     util,
 };
@@ -29,6 +30,8 @@ pub struct Playback {
     texture: Option<TextureHandle>,
     refresh_timestamp: Option<Instant>,
     settings: Rc<RefCell<Settings>>,
+    pub discovery_service: Option<DiscoveryService>,
+    pub sources: Vec<Ipv4Addr>,
 }
 
 impl Playback {
@@ -43,6 +46,8 @@ impl Playback {
             )),
             refresh_timestamp: None,
             settings,
+            discovery_service: None,
+            sources: vec![],
         }
     }
 
