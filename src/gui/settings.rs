@@ -7,7 +7,7 @@ impl Gui {
             self.text_buffer = path.to_str().unwrap().into();
         }
         ui.horizontal(|ui| {
-            ui.heading("Caster settings");
+            ui.heading("Settings");
             if ui.button("Back").clicked() {
                 return self.route_back();
             }
