@@ -22,7 +22,7 @@ pub const DISCOVERY_MESSAGE: &[u8] = b"policast";
 
 pub struct Server {
     handle: Option<JoinHandle<()>>,
-    _discovery_service: DiscoveryService,
+    _discovery_service: AdvertisingService,
     notify: Arc<Notify>,
 }
 
@@ -32,7 +32,7 @@ impl Server {
         let notify_clone = notify.clone();
         Self {
             handle: Some(spawn(move || server_main(serve_path, notify_clone))),
-            _discovery_service: DiscoveryService::new(Duration::from_millis(500)),
+            _discovery_service: AdvertisingService::new(Duration::from_millis(500)),
             notify,
         }
     }
@@ -63,9 +63,9 @@ async fn shutdown_signal(notify: Arc<Notify>) {
     notify.notified().await
 }
 
-struct DiscoveryService(Option<JoinHandle<()>>, Sender<()>);
+struct AdvertisingService(Option<JoinHandle<()>>, Sender<()>);
 
-impl DiscoveryService {
+impl AdvertisingService {
     fn new(period: Duration) -> Self {
         let (sender, receiver) = channel::<()>();
         Self(
@@ -90,7 +90,7 @@ impl DiscoveryService {
     }
 }
 
-impl Drop for DiscoveryService {
+impl Drop for AdvertisingService {
     fn drop(&mut self) {
         self.1.send(()).unwrap();
         self.0.take().unwrap().join().unwrap();
