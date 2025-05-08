@@ -211,34 +211,37 @@ pub fn ffmpeg_is_installed() -> bool {
 
 pub fn take_screenshot(source: &str) -> ColorImage {
     // let downsample_factor = "10";
-    if cfg!(target_os = "macos") {
-        let o = Command::new("ffmpeg")
-            .args([
-                "-f",
-                "avfoundation",
-                "-framerate",
-                "1",
-                "-i",
-                source,
-                "-frames:v",
-                "1",
-                // "-vf",
-                // &format!("scale=iw/{downsample_factor}:ih/{downsample_factor}"),
-                "-pix_fmt",
-                "rgba",
-                "-f",
-                "image2pipe",
-                "-vcodec",
-                "bmp",
-                "-",
-            ])
-            .output()
-            .unwrap()
-            .stdout;
-        bmp_to_image(o)
+    let os_arg = if cfg!(target_os = "macos") {
+        "avfoundation"
+    } else if cfg!(target_os = "windows") {
+        "gdigrab"
     } else {
-        unimplemented!();
-    }
+        unimplemented!()
+    };
+    let o = Command::new("ffmpeg")
+        .args([
+            "-f",
+            os_arg,
+            "-framerate",
+            "1",
+            "-i",
+            source,
+            "-frames:v",
+            "1",
+            // "-vf",
+            // &format!("scale=iw/{downsample_factor}:ih/{downsample_factor}"),
+            "-pix_fmt",
+            "rgba",
+            "-f",
+            "image2pipe",
+            "-vcodec",
+            "bmp",
+            "-",
+        ])
+        .output()
+        .unwrap()
+        .stdout;
+    bmp_to_image(o)
 }
 
 fn bmp_to_image(bmp_data: Vec<u8>) -> ColorImage {
