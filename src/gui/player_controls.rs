@@ -22,9 +22,31 @@ impl Gui {
             }
         });
 
-        self.playback.sources.iter().for_each(|source| {
-            ui.label(format!("{source}"));
-        });
+        let mut to_be_player_url = self
+            .playback
+            .sources
+            .iter()
+            .map(|source| {
+                let mut return_value: Option<String> = None;
+                ui.horizontal(|ui| {
+                    ui.label(format!("{source}"));
+                    if ui.button("Watch this caster").clicked() {
+                        return_value = Some(format!("http://{source}:3000/hls/output.m3u8"))
+                    }
+                });
+                return_value
+            })
+            .collect::<Vec<Option<String>>>();
+        let to_be_played_url = to_be_player_url
+            .iter_mut()
+            .find(|opt| opt.is_some())
+            .map(|opt| opt.take().unwrap())
+            .take();
+        if to_be_played_url.is_some() {
+            self.video_link = to_be_played_url.unwrap();
+            self._playback_play();
+        }
+
         if ui.button("Refresh sources").clicked() {
             let casters = self
                 .playback
