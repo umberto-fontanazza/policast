@@ -174,8 +174,9 @@ fn get_ffmpeg_args(
         "-",
     ];
 
-    input_args
+    vec!["-hide_banner"]
         .into_iter()
+        .chain(input_args.into_iter())
         .chain(args.into_iter())
         .filter(|arg| !arg.is_empty())
         .map(String::from)
@@ -220,6 +221,7 @@ pub fn ffmpeg_is_installed() -> bool {
 pub fn take_screenshot(source: &str) -> ColorImage {
     let o = Command::new("ffmpeg")
         .args([
+            "-hide_banner",
             "-f",
             OS_CAPTURE_DEVICE,
             "-framerate",
