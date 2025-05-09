@@ -41,7 +41,6 @@ pub struct Gui {
     _route: Route, // don't set this, use self.route_to() instead. This is used to reuse calculations between renders.
     _previous_routes: Vec<Route>,
     first_route_render: bool, // to avoid repeated calculation for each render
-    video_link: String,
     playback: Playback,
     capturer: Capturer,
     text_buffer: String,
@@ -63,7 +62,6 @@ impl Gui {
             _route: Route::default(),
             _previous_routes: Vec::with_capacity(ROUTER_STACK_PREALLOCATED_SIZE),
             first_route_render: true,
-            video_link: "".to_string(),
             playback: Playback::new(&cc.egui_ctx, settings_clone2),
             text_buffer: "Text goes here".to_owned(),
             hls_server: None,

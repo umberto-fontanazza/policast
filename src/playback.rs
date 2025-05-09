@@ -26,7 +26,7 @@ enum Status {
 
 pub struct Playback {
     status: Status,
-    video_link: Option<String>, // Private variable to store the video link
+    pub video_link: String, // Private variable to store the video link
     texture: Option<TextureHandle>,
     refresh_timestamp: Option<Instant>,
     settings: Rc<RefCell<Settings>>,
@@ -38,7 +38,7 @@ impl Playback {
     pub fn new(ctx: &egui::Context, settings: Rc<RefCell<Settings>>) -> Self {
         Self {
             status: Status::Stopped,
-            video_link: None,
+            video_link: "".to_string(),
             texture: Some(ctx.load_texture(
                 "video-frame",
                 ColorImage::example(),
@@ -49,10 +49,6 @@ impl Playback {
             discovery_service: None,
             sources: vec![],
         }
-    }
-
-    pub fn set_video_link(&mut self, link: String) {
-        self.video_link = Some(link);
     }
 
     pub fn status(&self) -> PlaybackStatus {
@@ -71,13 +67,7 @@ impl Playback {
             None
         };
         replace_with_or_abort(&mut self.status, |status| match status {
-            Status::Stopped => Status::Playing(Decoder::new(
-                self.video_link
-                    .as_ref()
-                    .expect("video_url must be set before playing")
-                    .clone(),
-                save_path,
-            )),
+            Status::Stopped => Status::Playing(Decoder::new(self.video_link.clone(), save_path)),
             Status::Paused(decoder) => Status::Playing(decoder),
             playing => playing,
         });

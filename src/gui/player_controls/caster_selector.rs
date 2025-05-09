@@ -31,8 +31,8 @@ impl Gui {
             })
             .map(|ip| format!("http://{ip}:{SERVER_PORT}/hls/output.m3u8"))
             .and_then(|url| {
-                self.video_link = url;
-                self._playback_play();
+                self.playback.video_link = url;
+                self.playback.play();
                 None as Option<()>
             });
 
@@ -49,6 +49,9 @@ impl Gui {
         ui.label("Enter the M3U link to play the video:");
 
         // Text field to input the M3U link
-        ui.add(TextEdit::singleline(&mut self.video_link).hint_text("Enter M3U playlist link"));
+        ui.add(
+            TextEdit::singleline(&mut self.playback.video_link)
+                .hint_text("Enter M3U playlist link"),
+        );
     }
 }

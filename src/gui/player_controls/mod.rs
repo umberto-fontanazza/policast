@@ -19,7 +19,7 @@ impl Gui {
             match self.playback.status() {
                 PlaybackStatus::Stopped => {
                     if ui.button("Play").clicked() {
-                        self._playback_play();
+                        self.playback.play();
                     };
                 }
                 PlaybackStatus::Playing => {
@@ -42,10 +42,5 @@ impl Gui {
         });
 
         self.playback.render(ui, ctx);
-    }
-
-    fn _playback_play(&mut self) {
-        self.playback.set_video_link(self.video_link.clone());
-        self.playback.play();
     }
 }
