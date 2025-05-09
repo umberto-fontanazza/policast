@@ -1,9 +1,11 @@
-use super::{Gui, Route};
-use crate::{playback::PlaybackStatus, server::DiscoveryService};
-use egui::TextEdit;
+use egui::{Context, TextEdit, Ui};
+
+use crate::server::DiscoveryService;
+
+use super::Gui;
 
 impl Gui {
-    pub fn player_controls(&mut self, ui: &mut egui::Ui, ctx: &egui::Context) {
+    pub fn caster_selector(&mut self, ui: &mut Ui, _ctx: &Context) {
         if self.first_route_render & self.playback.discovery_service.is_none() {
             self.playback.discovery_service = Some(DiscoveryService::new());
             let casters = self
@@ -14,13 +16,6 @@ impl Gui {
                 .unwrap();
             self.playback.sources = casters;
         }
-
-        ui.horizontal(|ui| {
-            ui.heading("Player root");
-            if ui.button("Settings").clicked() {
-                self.route_to(Route::Settings);
-            }
-        });
 
         let mut to_be_player_url = self
             .playback
@@ -61,38 +56,5 @@ impl Gui {
 
         // Text field to input the M3U link
         ui.add(TextEdit::singleline(&mut self.video_link).hint_text("Enter M3U playlist link"));
-
-        ui.horizontal(|ui| {
-            match self.playback.status() {
-                PlaybackStatus::Stopped => {
-                    if ui.button("Play").clicked() {
-                        self._playback_play();
-                    };
-                }
-                PlaybackStatus::Playing => {
-                    if ui.button("Stop").clicked() {
-                        self.playback.stop();
-                    }
-                    if ui.button("Pause").clicked() {
-                        self.playback.pause();
-                    }
-                }
-                PlaybackStatus::Paused => {
-                    if ui.button("Stop").clicked() {
-                        self.playback.stop();
-                    }
-                    if ui.button("Resume").clicked() {
-                        self.playback.play();
-                    }
-                }
-            };
-        });
-
-        self.playback.render(ui, ctx);
-    }
-
-    fn _playback_play(&mut self) {
-        self.playback.set_video_link(self.video_link.clone());
-        self.playback.play();
     }
 }
