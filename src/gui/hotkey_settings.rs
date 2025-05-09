@@ -8,7 +8,7 @@ use super::Gui;
 impl Gui {
     pub fn hotkey_settings(&mut self, ui: &mut Ui) {
         ui.label("Hotkey settings");
-        let mut table = TableBuilder::new(ui)
+        let table = TableBuilder::new(ui)
             .striped(true)
             .column(Column::auto().at_least(100.0))
             .column(Column::auto())
