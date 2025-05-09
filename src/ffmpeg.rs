@@ -9,6 +9,14 @@ use std::io::{self, Write};
 use std::path::Path;
 use std::process::{Child, Command, Stdio};
 
+const OS_CAPTURE_DEVICE: &'static str = if cfg!(target_os = "windows") {
+    "gdigrab"
+} else if cfg!(target_os = "macos") {
+    "avfoundation"
+} else {
+    "x11grab"
+};
+
 fn list_screen_capture_devices_macos() -> io::Result<HashMap<String, String>> {
     let output = Command::new("ffmpeg")
         .args(["-f", "avfoundation", "-list_devices", "true", "-i", ""])
@@ -210,26 +218,16 @@ pub fn ffmpeg_is_installed() -> bool {
 }
 
 pub fn take_screenshot(source: &str) -> ColorImage {
-    // let downsample_factor = "10";
-    let os_arg = if cfg!(target_os = "macos") {
-        "avfoundation"
-    } else if cfg!(target_os = "windows") {
-        "gdigrab"
-    } else {
-        unimplemented!()
-    };
     let o = Command::new("ffmpeg")
         .args([
             "-f",
-            os_arg,
+            OS_CAPTURE_DEVICE,
             "-framerate",
             "1",
             "-i",
             source,
             "-frames:v",
             "1",
-            // "-vf",
-            // &format!("scale=iw/{downsample_factor}:ih/{downsample_factor}"),
             "-pix_fmt",
             "rgba",
             "-f",
