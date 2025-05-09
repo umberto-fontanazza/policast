@@ -98,9 +98,7 @@ impl Playback {
     // Function to display the current video frame in the GUI
     pub fn render(&mut self, ui: &mut Ui, ctx: &egui::Context) {
         match self.status {
-            Status::Stopped => {
-                ui.label("Video is not playing");
-            }
+            Status::Stopped => (),
             Status::Playing(_) => {
                 let now = Instant::now();
                 match self.refresh_timestamp {

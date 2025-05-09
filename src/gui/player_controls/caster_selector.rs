@@ -18,6 +18,19 @@ impl Gui {
             self.playback.sources = casters;
         }
 
+        ui.horizontal(|ui| {
+            ui.strong("Casters in your LAN");
+            if ui.button("Refresh sources").clicked() {
+                let casters = self
+                    .playback
+                    .discovery_service
+                    .as_mut()
+                    .map(|ds| ds.get_casters())
+                    .unwrap();
+                self.playback.sources = casters;
+            }
+        });
+
         self.playback
             .sources
             .iter()
@@ -36,22 +49,14 @@ impl Gui {
                 None as Option<()>
             });
 
-        if ui.button("Refresh sources").clicked() {
-            let casters = self
-                .playback
-                .discovery_service
-                .as_mut()
-                .map(|ds| ds.get_casters())
-                .unwrap();
-            self.playback.sources = casters;
-        }
-
-        ui.label("Enter the M3U link to play the video:");
+        ui.horizontal(|ui| {
+            ui.label("Or enter manually the HLS playlist URL: ");
+            ui.add(
+                TextEdit::singleline(&mut self.playback.video_link)
+                    .hint_text("https://<hostname>:<port>/hls/output.m3u8"),
+            );
+        });
 
         // Text field to input the M3U link
-        ui.add(
-            TextEdit::singleline(&mut self.playback.video_link)
-                .hint_text("Enter M3U playlist link"),
-        );
     }
 }
